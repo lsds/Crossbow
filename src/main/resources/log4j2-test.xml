@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+	<Appenders>
+ 		<Console name="STDOUT" target="SYSTEM_OUT">
+			<!-- log message format -->
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %25c{1} (l. %4L) > %m%n"/>
+		</Console>
+	</Appenders>
+	<Loggers>
+		<!-- only log info level or higher for specific classes (e.g. error) -->
+		<Logger name="uk.ac.imperial.lsds.crossbow.device.blas.HeapMemoryManager" level="info"/>
+		<Logger name="uk.ac.imperial.lsds.crossbow.data.CircularDataBuffer" level="info"/>
+		<Logger name="uk.ac.imperial.lsds.crossbow.preprocess.mnist.MNIST" level="debug"/>
+		<Logger name="uk.ac.imperial.lsds.crossbow.preprocess.mnist.MNISTEncoder" level="debug"/>
+		<Logger name="uk.ac.imperial.lsds.crossbow.preprocess.ratings.Ratings" level="debug"/>
+		<Logger name="uk.ac.imperial.lsds.crossbow.preprocess.ratings.RatingsEncoder" level="debug"/>
+		<Logger name="uk.ac.imperial.lsds.crossbow.preprocess.yahoomusic.YahooMusic" level="debug"/>
+		<Logger name="uk.ac.imperial.lsds.crossbow.preprocess.yahoomusic.YahooMusicEncoder" level="debug"/>
+		<Logger name="uk.ac.imperial.lsds.crossbow.preprocess.imagenet.Reshuffle" level="debug"/>
+		<Root level="INFO">
+			<AppenderRef ref="STDOUT"/>
+		</Root>
+	</Loggers>
+</Configuration>

@@ -1,0 +1,13 @@
+#ifndef __CROSSBOW_LIGHTWEIGHTDATASETPROCESSORTASKPOOL_H_
+#define __CROSSBOW_LIGHTWEIGHTDATASETPROCESSORTASKPOOL_H_
+
+#include "lightweightdatasetprocessortask.h"
+
+typedef struct crossbow_lightweightdatasetprocessortaskpool *crossbowLightWeightDatasetProcessorTaskPoolP;
+typedef struct crossbow_lightweightdatasetprocessortaskpool {
+	crossbowLightWeightDatasetProcessorTaskP task;
+	int size;
+	crossbowLightWeightDatasetProcessorTaskPoolP next;
+} crossbow_lightweightdatasetprocessortaskpool_t;
+
+#endif /* __CROSSBOW_LIGHTWEIGHTDATASETPROCESSORTASKPOOL_H_ */

@@ -1,0 +1,263 @@
+package uk.ac.imperial.lsds.crossbow.kernel.conf;
+
+import java.util.LinkedList;
+
+import uk.ac.imperial.lsds.crossbow.cli.Option;
+import uk.ac.imperial.lsds.crossbow.device.TheGPU;
+import uk.ac.imperial.lsds.crossbow.types.LearningRateDecayPolicy;
+import uk.ac.imperial.lsds.crossbow.types.MomentumMethod;
+import uk.ac.imperial.lsds.crossbow.types.Regularisation;
+import uk.ac.imperial.lsds.crossbow.types.TrainingUnit;
+
+public class SolverConf implements IConf {
+	
+	private LearningRateDecayPolicy learningRateDecayPolicy;
+	
+	private float baseLearningRate;
+	
+	private float gamma;
+	private float power;
+	
+	private float momentum;
+	private MomentumMethod momentumMethod;
+	
+	private float weightDecay;
+	
+	private Regularisation regularizationType;
+	private float clipGradientThreshold;
+	
+	private int stepsize;
+	
+	private int currentstep;
+	private int [] stepvalues;
+	
+	private float alpha;
+	private int tau;
+	
+	public SolverConf () {
+		
+		learningRateDecayPolicy = LearningRateDecayPolicy.INV;
+		
+		baseLearningRate = 0F;
+		
+		gamma = 0F;
+		power = 0F;
+		
+		momentum = 0F;
+		momentumMethod = MomentumMethod.POLYAK;
+		
+		weightDecay = 0F;
+		
+		regularizationType = Regularisation.L2;
+		clipGradientThreshold = -1F;
+		
+		stepsize = 0;
+		
+		currentstep = 0;
+		stepvalues = null;
+		
+		alpha = 0.5F;
+		tau = 1;
+	}
+	
+	public float getBaseLearningRate () {
+		return baseLearningRate;
+	}
+	public SolverConf setBaseLearningRate (float baseLearningRate) {
+		this.baseLearningRate = baseLearningRate;
+		return this;
+	}
+
+	public LearningRateDecayPolicy getLearningRateDecayPolicy () {
+		return learningRateDecayPolicy;
+	}
+	
+	public SolverConf setLearningRateDecayPolicy 
+		(LearningRateDecayPolicy learningRateDecayPolicy) {
+		
+		this.learningRateDecayPolicy = learningRateDecayPolicy;
+		return this;
+	}
+
+	public float getGamma () {
+		return gamma;
+	}
+
+	public SolverConf setGamma (float gamma) {
+		this.gamma = gamma;
+		return this;
+	}
+
+	public float getPower() {
+		return power;
+	}
+
+	public SolverConf setPower (float power) {
+		this.power = power;
+		return this;
+	}
+
+	public float getMomentum () {
+		return momentum;
+	}
+
+	public SolverConf setMomentum (float momentum) {
+		this.momentum = momentum;
+		return this;
+	}
+	
+	public MomentumMethod getMomentumMethod () {
+		return momentumMethod;
+	}
+
+	public SolverConf setMomentumMethod (MomentumMethod momentumMethod) {
+		this.momentumMethod = momentumMethod;
+		return this;
+	}
+
+	public float getWeightDecay () {
+		return weightDecay;
+	}
+
+	public SolverConf setWeightDecay (float weightDecay) {
+		this.weightDecay = weightDecay;
+		return this;
+	}
+
+	public Regularisation getRegularisationType () {
+		return regularizationType;
+	}
+
+	public SolverConf setRegularisationType (Regularisation regularizationType) {
+		this.regularizationType = regularizationType;
+		return this;
+	}
+	
+	public float getClipGradientThreshold () {
+		return clipGradientThreshold;
+	}
+	
+	public SolverConf setClipGradientThreshold (float clipGradientThreshold) {
+		this.clipGradientThreshold = clipGradientThreshold;
+		return this;
+	}
+	
+	public int getStepSize () {
+		return stepsize;
+	}
+
+	public SolverConf setStepSize (int stepsize) {
+		this.stepsize = stepsize;
+		return this;
+	}
+	
+	public int getCurrentStep () {
+		return currentstep;
+	}
+
+	public SolverConf setCurrentStep (int currentstep) {
+		this.currentstep = currentstep;
+		return this;
+	}
+	
+	public int [] getStepValues () {
+		return stepvalues;
+	}
+
+	public SolverConf setStepValues (int... stepvalues) {
+		this.stepvalues = stepvalues;
+		return this;
+	}
+	
+	public SolverConf setAlpha (float alpha) {
+		this.alpha = alpha;
+		return this;
+	}
+	
+	public float getAlpha () {
+		return alpha;
+	}
+	
+	public SolverConf setTau (int tau) {
+		this.tau = tau;
+		return this;
+	}
+	
+	public int getTau () {
+		return tau;
+	}
+
+	public void GPURegister () {
+		
+		TheGPU.getInstance().setEamsgdAlpha (alpha);
+		TheGPU.getInstance().setEamsgdTau   (tau);
+		
+		TheGPU.getInstance().setMomentum    (momentum, momentumMethod.getId ());
+		TheGPU.getInstance().setWeightDecay (weightDecay);
+		
+		/* Set learning rate */
+		switch (learningRateDecayPolicy) {
+		case FIXED: 
+			TheGPU.getInstance().setLearningRateDecayPolicyFixed (baseLearningRate); 
+			break;
+		case INV:
+			TheGPU.getInstance().setLearningRateDecayPolicyInv (baseLearningRate, gamma, power);
+			break;
+		case STEP:
+			TheGPU.getInstance().setLearningRateDecayPolicyStep (baseLearningRate, gamma, stepsize);
+			break;
+		case MULTISTEP:
+			if (stepvalues == null)
+				throw new  NullPointerException();
+			TheGPU.getInstance().setLearningRateDecayPolicyMultiStep (baseLearningRate, gamma, stepvalues);
+			break;
+		case EXP:
+			TheGPU.getInstance().setLearningRateDecayPolicyExp (baseLearningRate, gamma);
+			break;
+		default:
+			throw new IllegalStateException ("error: invalid learning rate decay policy type");
+		}	
+	}
+
+	public static LinkedList<Option> getOptions () {
+		
+		LinkedList<Option> opts = new LinkedList<Option>();
+		
+		opts.add(new Option("--learning-rate-decay-policy").setType ( String.class));
+		opts.add(new Option("--learning-rate"             ).setType (  Float.class));
+		opts.add(new Option("--gamma"                     ).setType (  Float.class));
+		opts.add(new Option("--power"                     ).setType (  Float.class));
+		opts.add(new Option("--momentum"                  ).setType (  Float.class));
+		opts.add(new Option("--momentum-method"           ).setType ( String.class));
+		opts.add(new Option("--weight-decay"              ).setType (  Float.class));
+		opts.add(new Option("--regularisation-type"       ).setType ( String.class));
+		opts.add(new Option("--clip-gradient-threshold"   ).setType ( String.class));
+		opts.add(new Option("--step-size"                 ).setType (Integer.class));
+		opts.add(new Option("--step-values"               ).setType ( String.class));
+		opts.add(new Option("--alpha"                     ).setType (  Float.class));
+		opts.add(new Option("--tau"                       ).setType (Integer.class));
+		
+		return opts;
+	}
+	
+	public String toString () {
+		
+		StringBuilder s = new StringBuilder ("=== [Solver configuration dump] ===\n");
+		
+		s.append (String.format("Learning rate decay policy is '%s'\n", learningRateDecayPolicy.toString ()));
+		s.append (String.format("Learning rate is %.5f\n", baseLearningRate));
+		s.append (String.format("Gamma is %.5f\n", gamma));
+		s.append (String.format("Power is %.5f\n", power));
+		s.append (String.format("Momentum is %.5f\n", momentum));
+		s.append (String.format("Momentum method is %s\n", momentumMethod));
+		s.append (String.format("Regularisation type is '%s'\n", regularizationType.toString()));
+		s.append (String.format("Step size is %d\n", stepsize));
+		s.append (String.format("Step values are %s\n", stepvalues));
+		s.append (String.format("Alpha is %.5f\n", alpha));
+		s.append (String.format("Tau is %d\n", tau));
+		
+		s.append("=== [End of solver configuration dump] ===\n");
+		
+		return s.toString();
+	}
+}

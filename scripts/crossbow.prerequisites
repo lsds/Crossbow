@@ -1,0 +1,47 @@
+#
+# Crossbow essential and optional commands and their packages
+# 
+# About this file
+# ===============
+#
+# Lines starting with # are ignored. So are empty lines.
+# 
+# Each line contains three fields, separated by ":":
+#
+#	[command]:[package]:[flag]
+#
+# If [command] is not present in the system, then the installation 
+# script will try to install [package] using 'apt-get'.
+# 
+# [flag] can be either 'y' or 'n' (for 'yes' or 'no'), indicating
+# an essential ('y') or an optional ('n') command and/or package.
+# 
+# When not set, the default flag is 'y'. 
+#
+# Valid lines include:
+# 
+# ::
+#  [command]:[package]
+#  [command]
+#  [command]::[flag]
+# :[package]:[flag]
+# :[package]
+
+javac    : openjdk-7-jdk
+java     : openjdk-7-jre
+mvn      : maven
+make     : make
+gcc      : gcc
+python   : python
+
+#
+# Commands and packages associated
+# paper recompilation
+#
+
+latex    : texlive-latex-base : n
+bibtex   :                    : n
+epstopdf : texlive-font-utils : n
+gnuplot  : gnuplot            : n
+perl     :                    : n
+
