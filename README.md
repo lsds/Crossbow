@@ -1,4 +1,4 @@
-# Crossbow: a multi-GPU deep learning system for small batch sizes
+# Crossbow: A multi-GPU Deep Learning System for Training with Small Batch Sizes
 
 ## About
 
@@ -6,9 +6,9 @@
   allows users to choose freely their preferred batch size, however small,
   while scaling to multiple GPUs. 
   
-**Crossbow** gets more out of a modern GPU than other systems by training multiple  _model replicas_ on the same GPU. When the batch size is so small that leaves GPU resources unused, **Crossbow** trains a second replica, a third, and so on, as long as training throughput increases.
+**Crossbow** utilises modern GPUs better than other systems by training multiple  _model replicas_ on the same GPU. When the batch size is sufficiently small to leave GPU resources unused, **Crossbow** trains a second model replica, a third, etc., as long as training throughput increases.
 
-**Crossbow** proposes to use _synchronous model averaging_ to adjust the trajectory of each individual replica based on the average of all. With model averaging the batch size does not increase linearly with the number of model replicas, as it would with synchronous SGD. This yields better statistical efficiency without cumbersome hyper-parameter tuning at scale.
+To synchronise many model replicas, **Crossbow** uses _synchronous model averaging_ to adjust the trajectory of each individual replica based on the average of all. With model averaging, the batch size does not increase linearly with the number of model replicas, as it would with synchronous SGD. This yields better statistical efficiency without cumbersome hyper-parameter tuning when trying to scale training to a larger number of GPUs.
 
 See our [arXiv paper]() for more details.
 
@@ -54,7 +54,7 @@ and that:
 
 Save changes and reboot the machine.
 
-### Build Crossbow
+### Building Crossbow
 
 Assuming all enviromental variables have been set, build Crossbow's Java and C/C++ library:
 
@@ -67,7 +67,7 @@ $ ./scripts/build.sh
 
 _**Note:** We will shortly add an installation script as well as a Docker image to simplify the installation process and avoid library conflicts._
 
-## Train one of our benchmark models
+## Training one of our benchmark models
 
 ### ResNet-50
 
@@ -100,7 +100,7 @@ $ ./scripts/benchmarks/lenet.sh
 
 _**Note:** We will shortly add a page describing how to configure Crossbow's system parameters._
 
-## Try your first Crossbow program
+## Trying your first Crossbow program
 
 **Crossbow** represents a deep learning application as a data flow graph: nodes
   represent operations and edges the data (multi-dimensional arrays, also known
