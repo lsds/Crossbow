@@ -1,4 +1,4 @@
-# Crossbow: A multi-GPU Deep Learning System for Training with Small Batch Sizes
+# Crossbow: A Multi-GPU Deep Learning System for Training with Small Batch Sizes
 
 ## About
 
