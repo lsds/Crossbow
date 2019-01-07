@@ -1,0 +1,1 @@
+Default MNIST data directory

@@ -1,0 +1,14 @@
+# Metadata file
+#
+examples     : /data/imagenet/crossbow/crossbow-validation.records
+labels       : /data/imagenet/crossbow/crossbow-validation.records
+partitions   : 25
+elements     : 50000
+batch size   : 1
+example shape: [3, 224, 224]
+label shape  : [1]
+example type : float
+label type   : int
+example pad  : 0
+label pad    : 0
+# EOF
