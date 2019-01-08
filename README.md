@@ -1,7 +1,5 @@
 # Crossbow: A Multi-GPU Deep Learning System for Training with Small Batch Sizes
 
-## About
-
 **Crossbow** is a multi-GPU system for training deep learning models that
   allows users to choose freely their preferred batch size, however small,
   while scaling to multiple GPUs. 
