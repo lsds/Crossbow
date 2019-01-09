@@ -8,7 +8,7 @@
 
 To synchronise many model replicas, **Crossbow** uses _synchronous model averaging_ to adjust the trajectory of each individual replica based on the average of all. With model averaging, the batch size does not increase linearly with the number of model replicas, as it would with synchronous SGD. This yields better statistical efficiency without cumbersome hyper-parameter tuning when trying to scale training to a larger number of GPUs.
 
-See our [arXiv paper]() for more details.
+See our [arXiv paper](http://arxiv.org/abs/1901.02244) for more details.
 
 The system supports a variety of training algorithms, including synchronous SGD. We are working to seemlesly port existing TensorFlow models to Crossbow. 
 
