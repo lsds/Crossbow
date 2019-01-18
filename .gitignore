@@ -12,11 +12,6 @@
 *.labels
 *.metadata
 *.jar
-*/crossbow-vldb16.pdf
-doc/papers/16-crossbow-vldb/crossbow-vldb16.pdf
-doc/papers/17-crossbow-sosp/crossbow-sosp17.pdf
-doc/papers/18-crossbow-sigmod/crossbow-sigmod18.pdf
-data
-checkpoint
+checkpoints
 .DS_Store
 /target/
