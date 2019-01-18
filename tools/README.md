@@ -15,16 +15,6 @@ Current issues:
 TODO:
 
 ```
-akolious@platypus2:~/crossbow.git/tools$ docker run --runtime=nvidia -u $(id -u):$(id -g) -v $(pwd):/my-devel -it cb
-groups: cannot find name for group ID 1679
-I have no name!@614d2413fd20:/$ ls
-bin   dev  home  lib64  mnt   opt   root  sbin  sys  usr
-boot  etc  lib   media  my-devel  proc  run   srv   tmp  var    
-```
-
-TODO:
-
-```
 debconf: unable to initialize frontend: Dialog
 debconf: (TERM is not set, so the dialog frontend is not usable.)
 debconf: falling back to frontend: Readline
