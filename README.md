@@ -19,7 +19,7 @@ The system supports a variety of training algorithms, including synchronous SGD.
 **Crossbow** has been primarily tested on Ubuntu Linux 16.04. It requires the following Linux packages:
 
 ```shell
-$ sudo apt-get install build-essential git openjdk-8-jdk maven libboost-all-dev graphviz
+$ sudo apt-get install build-essential git openjdk-8-jdk maven libboost-all-dev graphviz wget
 ```
  
 **Crossbow** requires NVIDIA's [CUDA](https://developer.nvidia.com/cuda-toolkit) toolkit, the [cuDDN](https://developer.nvidia.com/cudnn) library and the [NCCL](https://docs.nvidia.com/deeplearning/sdk/nccl-install-guide/index.html) library (currently using versions 8.0, 6.0, and 2.1.15, respectively). After successful installation, make sure that:
