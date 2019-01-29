@@ -46,16 +46,20 @@ RUN apt update && apt install -y --no-install-recommends \
 ENV CUDA_HOME /usr/local/cuda
 
 # OpenBLAS (TODO: install using apt install)
+# OpenBLAS relase 0.3.5 commit hash: eebc18928715775c9ed254684edee16e4efe0342
 RUN git clone https://github.com/xianyi/OpenBLAS.git openblas \
     && cd openblas \
+    && git checkout eebc18928715775c9ed254684edee16e4efe0342 \
     && make -j $(nproc) \
     && make install
 ENV BLAS_HOME /opt/OpenBLAS
 ENV LD_LIBRARY_PATH $BLAS_HOME/lib:$LD_LIBRARY_PATH
 
 # libjpeg-turbo (TODO: install using apt install)
+# libjpeg-turbo relase 2.0.1 commit hash: bb3d325624526c91646bb9af9578d7198c082d51
 RUN git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git \
     && cd libjpeg-turbo \
+    && git checkout bb3d325624526c91646bb9af9578d7198c082d51 \
     && cmake -G"Unix Makefiles" && make -j $(nproc)
 ENV JPEG_HOME /libjpeg-turbo
 ENV LD_LIBRARY_PATH $JPEG_HOME/lib:$LD_LIBRARY_PATH
