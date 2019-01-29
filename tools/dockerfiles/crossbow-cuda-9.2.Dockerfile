@@ -73,7 +73,7 @@ RUN git clone http://github.com/lsds/Crossbow.git crossbow \
     && ./scripts/build.sh
 
 # Some TF tools expect a "python" binary
-RUN ln -s $(which ${PYTHON}) /usr/local/bin/python
+RUN ln -s $(which python3) /usr/local/bin/python
 
 # Prepare a MNIST dataset local
 RUN mkdir -p /data/crossbow/mnist/original \ 
