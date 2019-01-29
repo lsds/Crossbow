@@ -1,7 +1,5 @@
+# Crossbow Docker image based on nvidia docker CUDA 9.2
 ARG UBUNTU_VERSION=16.04
-
-# Installation based on CUDA-9.2...
-
 FROM nvidia/cuda:9.2-base-ubuntu${UBUNTU_VERSION} as base
 
 # See http://bugs.python.org/issue19846
@@ -45,8 +43,8 @@ RUN apt update && apt install -y --no-install-recommends \
 
 ENV CUDA_HOME /usr/local/cuda
 
-# OpenBLAS (TODO: install using apt install)
-# OpenBLAS relase 0.3.5 commit hash: eebc18928715775c9ed254684edee16e4efe0342
+# OpenBLAS
+# Release 0.3.5 commit hash: eebc18928715775c9ed254684edee16e4efe0342
 RUN git clone https://github.com/xianyi/OpenBLAS.git openblas \
     && cd openblas \
     && git checkout eebc18928715775c9ed254684edee16e4efe0342 \
@@ -55,8 +53,8 @@ RUN git clone https://github.com/xianyi/OpenBLAS.git openblas \
 ENV BLAS_HOME /opt/OpenBLAS
 ENV LD_LIBRARY_PATH $BLAS_HOME/lib:$LD_LIBRARY_PATH
 
-# libjpeg-turbo (TODO: install using apt install)
-# libjpeg-turbo relase 2.0.1 commit hash: bb3d325624526c91646bb9af9578d7198c082d51
+# libjpeg-turbo
+# Release 2.0.1 commit hash: bb3d325624526c91646bb9af9578d7198c082d51
 RUN git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git \
     && cd libjpeg-turbo \
     && git checkout bb3d325624526c91646bb9af9578d7198c082d51 \
