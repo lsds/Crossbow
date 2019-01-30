@@ -1,7 +1,5 @@
+# Crossbow Docker image based on nvidia docker CUDA 9.2
 ARG UBUNTU_VERSION=16.04
-
-# Installation based on CUDA-9.2...
-
 FROM nvidia/cuda:9.2-base-ubuntu${UBUNTU_VERSION} as base
 
 # See http://bugs.python.org/issue19846
@@ -45,17 +43,21 @@ RUN apt update && apt install -y --no-install-recommends \
 
 ENV CUDA_HOME /usr/local/cuda
 
-# OpenBLAS (TODO: install using apt install)
+# OpenBLAS
 RUN git clone https://github.com/xianyi/OpenBLAS.git openblas \
     && cd openblas \
+    && git checkout v0.3.5 \
     && make -j $(nproc) \
-    && make install
+    && make install \
+    && cd ../ \
+    && rm -fr openblas
 ENV BLAS_HOME /opt/OpenBLAS
 ENV LD_LIBRARY_PATH $BLAS_HOME/lib:$LD_LIBRARY_PATH
 
-# libjpeg-turbo (TODO: install using apt install)
+# libjpeg-turbo
 RUN git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git \
     && cd libjpeg-turbo \
+    && git checkout 2.0.1 \
     && cmake -G"Unix Makefiles" && make -j $(nproc)
 ENV JPEG_HOME /libjpeg-turbo
 ENV LD_LIBRARY_PATH $JPEG_HOME/lib:$LD_LIBRARY_PATH
