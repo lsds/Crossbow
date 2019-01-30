@@ -10,10 +10,8 @@ $ docker build -f ./dockerfiles/crossbow-cuda-9.2.Dockerfile -t crossbow:latest 
 
 We run a LeNet example under the: ./crossbow/scripts/benchmarks/lenet.sh.
 
-Here we assume that the data disk is under: /home/akolious/.m2/:/root/.m2. You can mount your data disk by replacing this path.
-
 ```bash
-$ docker run --runtime=nvidia -u root:root -v /home/akolious/.m2/:/root/.m2 --ulimit memlock=1073741824:1073741824 -it crossbow:latest ./crossbow/scripts/benchmarks/lenet.sh
+$ docker run --runtime=nvidia -u root:root --ulimit memlock=1073741824:1073741824 -it crossbow:latest ./crossbow/scripts/benchmarks/lenet.sh
 ```
 
 Current issues:

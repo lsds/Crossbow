@@ -75,7 +75,9 @@ RUN git clone http://github.com/lsds/Crossbow.git crossbow \
     && ./scripts/build.sh
 
 # Some TF tools expect a "python" binary
-RUN ln -s $(which python3) /usr/local/bin/python
+RUN ln -s $(which python3) /usr/local/bin/python \
+    && pip3 install setuptools \
+    && pip3 install tensorflow==1.12.0
 
 # Prepare a MNIST dataset local
 RUN mkdir -p /data/crossbow/mnist/original \ 
