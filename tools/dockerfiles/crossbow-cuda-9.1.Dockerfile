@@ -122,6 +122,6 @@ RUN ./scripts/datasets/mnist/prepare-mnist.sh
 RUN echo $LD_LIBRARY_PATH 
 # RUN ls $JPEG_HOME/
 ENV LD_LIBRARY_PATH $JPEG_HOME:$LD_LIBRARY_PATH
-RUN ./scripts/benchmarks/lenet.sh
-RUN echo "* hard memlock unlimited" >>/etc/security/limits.conf
-RUN echo "* soft memlock unlimited" >>/etc/security/limits.conf
+# RUN ./scripts/benchmarks/lenet.sh
+# RUN echo "* hard memlock unlimited" >>/etc/security/limits.conf
+# RUN echo "* soft memlock unlimited" >>/etc/security/limits.conf
