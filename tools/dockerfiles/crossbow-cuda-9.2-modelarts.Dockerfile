@@ -14,10 +14,10 @@ RUN apt update && apt install -y --no-install-recommends \
         cuda-curand-9-2 \
         cuda-cusolver-9-2 \
         cuda-cusparse-9-2 \
-        libcudnn7=7.1.4.18-1+cuda9.2 \ 
+        libcudnn7 \ 
         libnccl2 \ 
         libnccl-dev \
-        libcudnn7-dev=7.1.4.18-1+cuda9.2 \
+        libcudnn7-dev \
         libfreetype6-dev \
         libhdf5-serial-dev \
         libpng12-dev \
