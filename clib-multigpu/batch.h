@@ -5,26 +5,29 @@
 
 typedef struct crossbow_batch *crossbowBatchP;
 typedef struct crossbow_batch {
+
+	/* TODO Add documentation about splits */
     int splits;
-	crossbowVariableSchemaP examples;
+
+    crossbowVariableSchemaP examples;
 	crossbowVariableSchemaP labels;
 } crossbow_batch_t;
 
 crossbowBatchP crossbowBatchCreate ();
 
-void crossbowBatchSetSplits(crossbowBatchP, int);
-
 void crossbowBatchSetExampleSchema (crossbowBatchP, crossbowVariableSchemaP);
-
-void crossbowBatchSetLabelSchema (crossbowBatchP, crossbowVariableSchemaP);
 
 crossbowVariableSchemaP crossbowBatchGetExampleSchema (crossbowBatchP);
 
+void crossbowBatchSetLabelSchema (crossbowBatchP, crossbowVariableSchemaP);
+
 crossbowVariableSchemaP crossbowBatchGetLabelSchema (crossbowBatchP);
 
-int crossbowBatchGetSplits (crossbowBatchP);
-
 int crossbowBatchConfigured (crossbowBatchP);
+
+void crossbowBatchSetSplits(crossbowBatchP, int);
+
+int crossbowBatchGetSplits (crossbowBatchP);
 
 void crossbowBatchFree (crossbowBatchP);
 

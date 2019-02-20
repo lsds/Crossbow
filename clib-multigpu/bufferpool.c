@@ -5,13 +5,13 @@
 #include "debug.h"
 #include "utils.h"
 
-crossbowBufferPoolP crossbowBufferPoolCreate (int size, int default_capacity) {
+crossbowBufferPoolP crossbowBufferPoolCreate (int size, int capacity) {
 	int i;
 	crossbowBufferPoolP p;
 	p = (crossbowBufferPoolP) crossbowMalloc (sizeof(crossbow_bufferpool_t));
 	p->size = size;
 	p->buffers = (crossbowByteBufferP *) crossbowMalloc (p->size * sizeof(crossbowByteBufferP));
-	p->default_capacity = default_capacity;
+	p->capacity = capacity;
 	for (i = 0; i < p->size; i++)
 		p->buffers[i] = NULL;
 	return p;
@@ -23,7 +23,7 @@ crossbowByteBufferP crossbowBufferPoolGet (crossbowBufferPoolP pool, int ndx) {
 	p = pool->buffers[ndx];
 	/* Lazy materialisation */
 	if (! p)
-		return crossbowByteBufferCreate (pool->default_capacity);
+		return crossbowByteBufferCreate (pool->capacity);
 	return p;
 }
 

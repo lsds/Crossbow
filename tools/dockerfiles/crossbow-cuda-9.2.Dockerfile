@@ -1,4 +1,4 @@
-# Crossbow Docker image based on nvidia docker CUDA 9.2
+# Crossbow Docker image based on NVIDIA docker CUDA 9.2
 ARG UBUNTU_VERSION=16.04
 FROM nvidia/cuda:9.2-base-ubuntu${UBUNTU_VERSION} as base
 

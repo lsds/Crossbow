@@ -4,7 +4,11 @@
 typedef struct crossbow_arraylist *crossbowArrayListP;
 typedef struct crossbow_arraylist {
 	int size;
-	volatile int iter; /* Iterator index to return element at position 0, 1, 2, ..., (size - 1), 0, 1, 2, and so on */
+	/*
+	 * Iterator index to return element at position
+	 * 0, 1, 2, ..., (size - 1), 0, 1, 2, and so on
+	 */
+	volatile int iter;
 	void **elements;
 } crossbow_arraylist_t;
 

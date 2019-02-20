@@ -43,7 +43,7 @@ tstamp_t crossbowTimerElapsedTime (crossbowTimerP t) {
 
 tstamp_t crossbowTimerLap (crossbowTimerP t) {
 	tstamp_t dt = crossbowTimerElapsedTime (t);
-	/* Timer has is not running and t->end contains current time */
+	/* Timer has stopped and t->end contains current time */
 	t->start.tv_sec  = t->end.tv_sec;
 	t->start.tv_usec = t->end.tv_usec;
 	t->isRunning = 1;

@@ -6,7 +6,8 @@
 typedef struct crossbow_bufferpool *crossbowBufferPoolP;
 typedef struct crossbow_bufferpool {
 	int size;
-	int default_capacity;
+	/* Default byte buffer size */
+	int capacity;
 	crossbowByteBufferP *buffers;
 } crossbow_bufferpool_t;
 

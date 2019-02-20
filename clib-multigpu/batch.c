@@ -48,6 +48,9 @@ int crossbowBatchGetSplits (crossbowBatchP batch) {
     return batch->splits;
 }
 
+/*
+ * Check if schemata for examples and labels are set.
+ */
 int crossbowBatchConfigured (crossbowBatchP batch) {
 	nullPointerException(batch);
 	return (batch->examples != NULL && batch->labels != NULL);

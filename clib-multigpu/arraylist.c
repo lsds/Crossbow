@@ -10,7 +10,7 @@ crossbowArrayListP crossbowArrayListCreate (int size) {
 	crossbowArrayListP p;
 	p = (crossbowArrayListP) crossbowMalloc (sizeof(crossbow_arraylist_t));
 	p->size = (size > 0) ? size : 1;
-	p->iter = -1; /* Next points to element at position 0 */
+	p->iter = -1; /* Next element is at position 0 */
 	p->elements = crossbowMalloc (p->size * sizeof(void *));
 	for (i = 0; i < p->size; ++i)
 		p->elements[i] = NULL;

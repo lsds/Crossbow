@@ -54,7 +54,6 @@ char *crossbowVariableSchemaString (crossbowVariableSchemaP p) {
 	offset = 0;
 	/* [a, b, ...] (X elements Y bytes) */
 	crossbowStringAppend (s, &offset, &remaining, "[");
-	// info("fill in %d dims...\n", p->dims);
 	for (i = 0; i < p->dims; i++) {
 		crossbowStringAppend (s, &offset, &remaining, "%d", p->shape[i]);
 		if (i < (p->dims - 1))
