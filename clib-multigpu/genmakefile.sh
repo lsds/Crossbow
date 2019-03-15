@@ -152,7 +152,9 @@ INCLUDES += -I\$(CUDA_PATH)/include
 INCLUDES += -I\$(BLAS_PATH)/include
 
 # NCCL
-INCLUDES += -I\$(NCCL_PATH)/include
+ifneq (\$(NCCL_PATH),)
+	INCLUDES += -I\$(NCCL_PATH)/include
+endif
 
 # Turbo-JPEG
 INCLUDES += -I\$(JPEG_PATH)
@@ -182,7 +184,11 @@ LIBS += -L\$(CUDA_PATH)/lib\$(POSTFIX) -lcudart -lcublas -lcudnn -lcurand -lnvTo
 LIBS += -L\$(BLAS_PATH)/lib -lopenblas
 
 # NCCL
-LIBS += -L\$(NCCL_PATH)/lib -lnccl
+ifneq (\$(NCCL_PATH),)
+	LIBS += -L\$(NCCL_PATH)/lib -lnccl
+else
+	LIBS += -lnccl
+endif
 
 # PTX code generation
 #
