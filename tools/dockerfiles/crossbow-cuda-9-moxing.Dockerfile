@@ -7,8 +7,7 @@ RUN sed -i 's/cmc-cd-mirror.rnd.huawei.com/security.ubuntu.com/g' /etc/apt/sourc
 
 # Replace the standard ubuntu source with Aliyun sources if buidling in mainland China
 RUN sed -i s/archive.ubuntu.com/mirrors.aliyun.com/g /etc/apt/sources.list \
-    && sed -i s/security.ubuntu.com/mirrors.aliyun.com/g /etc/apt/sources.list \
-    && apt-get update && apt-get upgrade
+    && sed -i s/security.ubuntu.com/mirrors.aliyun.com/g /etc/apt/sources.list 
 
 # The pip source has been pre-configured to an internal source. Roll back to public sources.
 RUN rm $HOME/.pip/pip.conf
