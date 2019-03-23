@@ -63,7 +63,7 @@ RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorflow-gpu==1.12
 # RUN pip install tensorflow-gpu==1.12.0
 
 # OpenBLAS (TODO: install using apt install)
-RUN git clone https://github.com/xianyi/OpenBLAS.git openblas \
+RUN git clone --progress https://github.com/xianyi/OpenBLAS.git openblas \
     && cd openblas \
     && make -j $(nproc) \
     && make install
@@ -71,7 +71,7 @@ ENV BLAS_HOME /opt/OpenBLAS
 ENV LD_LIBRARY_PATH $BLAS_HOME/lib:$LD_LIBRARY_PATH
 
 # libjpeg-turbo (TODO: install using apt install)
-RUN git clone https://github.com/libjpeg-turbo/libjpeg-turbo.git \
+RUN git clone --progress https://github.com/libjpeg-turbo/libjpeg-turbo.git \
     && cd libjpeg-turbo \
     && cmake -G"Unix Makefiles" && make -j $(nproc)
 ENV JPEG_HOME /libjpeg-turbo
@@ -80,7 +80,7 @@ ENV LD_LIBRARY_PATH $JPEG_HOME:$LD_LIBRARY_PATH
 
 # Crossbow
 ENV CROSSBOW_HOME /crossbow
-RUN git clone http://github.com/lsds/Crossbow.git crossbow \
+RUN git clone --progress http://github.com/lsds/Crossbow.git crossbow \
     && cd crossbow \
     && mvn package \
     && cd clib-multigpu \
