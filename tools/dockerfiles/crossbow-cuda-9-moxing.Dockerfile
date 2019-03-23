@@ -21,9 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list && \
     echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list
 
-# The pip source has been pre-configured to an internal source. Roll back to public sources.
-RUN rm $HOME/.pip/pip.conf
-
 # See http://bugs.python.org/issue19846
 ENV LANG C.UTF-8
 
@@ -58,8 +55,11 @@ RUN apt update && apt install -y --no-install-recommends \
 
 ENV CUDA_HOME /usr/local/cuda
 
+# The pip source has been pre-configured to an internal source. Roll back to public sources.
+RUN rm $HOME/.pip/pip.conf
+
 # Install tensorflow-gpu 1.12.0 in the conda environment (pip has been redirected to conda pip)
-RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorflow-gpu==1.10.0 # Run this if in the mainland China
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorflow-gpu==1.12.0 # Run this if in the mainland China
 # RUN pip install tensorflow-gpu==1.12.0
 
 # OpenBLAS (TODO: install using apt install)
