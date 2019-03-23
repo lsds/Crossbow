@@ -34,7 +34,9 @@ RUN apt update && apt install -y --no-install-recommends \
         cuda-cusolver-9-0 \
         cuda-cusparse-9-0 \
         libcudnn7=7.2.1.38-1+cuda9.0 \
+        libcudnn7-dev=7.2.1.38-1+cuda9.0 \
         libnccl2=2.2.13-1+cuda9.0 \
+        libnccl2-dev=2.2.13-1+cuda9.0 \
         cuda-command-line-tools-9-0 \
         libfreetype6-dev \
         libhdf5-serial-dev \
