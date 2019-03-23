@@ -90,8 +90,3 @@ RUN git clone --progress http://github.com/lsds/Crossbow.git crossbow \
     && make -j $(nproc) \
     && cd ../ \
     && ./scripts/build.sh
-
-# Prepare a MNIST dataset local
-RUN mkdir -p /data/crossbow/mnist/original \ 
-    && mkdir -p /data/crossbow/mnist/b-1024 \
-    && ./crossbow/scripts/datasets/mnist/prepare-mnist.sh
