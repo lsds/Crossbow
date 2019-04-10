@@ -79,14 +79,3 @@ RUN git clone --progress https://github.com/libjpeg-turbo/libjpeg-turbo.git \
 ENV JPEG_HOME /libjpeg-turbo
 ENV LD_LIBRARY_PATH $JPEG_HOME/lib:$LD_LIBRARY_PATH
 ENV LD_LIBRARY_PATH $JPEG_HOME:$LD_LIBRARY_PATH
-
-# Crossbow
-ENV CROSSBOW_HOME /crossbow
-RUN git clone --progress http://github.com/lsds/Crossbow.git crossbow \
-    && cd crossbow \
-    && mvn package \
-    && cd clib-multigpu \
-    && ./genmakefile.sh \
-    && make -j $(nproc) \
-    && cd ../ \
-    && ./scripts/build.sh
