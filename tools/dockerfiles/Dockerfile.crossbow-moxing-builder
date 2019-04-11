@@ -2,15 +2,15 @@
 # ModelArts example: https://github.com/huawei-clouds/modelarts-example/blob/master/CustomImage
 FROM swr.cn-north-1.myhuaweicloud.com/eiwizard/custom-gpu-cuda9-inner-moxing-cp36:1.1 as base
 
+# The pip source has been pre-configured to an internal source. Roll back to public sources.
+RUN rm $HOME/.pip/pip.conf
+
 # Fix the source lists
 RUN sed -i 's/cmc-cd-mirror.rnd.huawei.com/security.ubuntu.com/g' /etc/apt/sources.list
 
 # Replace the standard ubuntu source with Aliyun sources if buidling in mainland China
 RUN sed -i s/archive.ubuntu.com/mirrors.aliyun.com/g /etc/apt/sources.list \
     && sed -i s/security.ubuntu.com/mirrors.aliyun.com/g /etc/apt/sources.list
-
-# The pip source has been pre-configured to an internal source. Roll back to public sources.
-RUN rm $HOME/.pip/pip.conf
 
 # Add the NVIDIA package repo and fetch key
 # Reference: https://gitlab.com/nvidia/cuda/blob/ubuntu16.04/9.0/base/Dockerfile#L4
@@ -56,5 +56,21 @@ RUN apt update && apt install -y --no-install-recommends \
         && rm -rf /var/lib/apt/lists/*
 
 ENV CUDA_HOME /usr/local/cuda
+
+# OpenBLAS (TODO: install using apt install)
+RUN git clone --progress https://github.com/xianyi/OpenBLAS.git openblas \
+    && cd openblas \
+    && make -j $(nproc) \
+    && make install
+ENV BLAS_HOME /opt/OpenBLAS
+ENV LD_LIBRARY_PATH $BLAS_HOME/lib:$LD_LIBRARY_PATH
+
+# libjpeg-turbo (TODO: install using apt install)
+RUN git clone --progress https://github.com/libjpeg-turbo/libjpeg-turbo.git \
+    && cd libjpeg-turbo \
+    && cmake -G"Unix Makefiles" && make -j $(nproc)
+ENV JPEG_HOME /libjpeg-turbo
+ENV LD_LIBRARY_PATH $JPEG_HOME/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH $JPEG_HOME:$LD_LIBRARY_PATH
 
 WORKDIR /
