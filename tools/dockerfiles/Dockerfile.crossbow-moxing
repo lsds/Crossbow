@@ -2,7 +2,6 @@
 # ModelArts example: https://github.com/huawei-clouds/modelarts-example/blob/master/CustomImage
 FROM swr.cn-north-1.myhuaweicloud.com/eiwizard/custom-gpu-cuda9-inner-moxing-cp36:1.1 as base
 
-
 ENV CUDA_HOME /usr/local/cuda
 
 # The pip source has been pre-configured to an internal source. Roll back to public sources.
