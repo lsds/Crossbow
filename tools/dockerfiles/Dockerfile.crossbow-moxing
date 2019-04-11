@@ -4,9 +4,6 @@ FROM swr.cn-north-1.myhuaweicloud.com/eiwizard/custom-gpu-cuda9-cudnn72:1.0-0 as
 
 ENV CUDA_HOME /usr/local/cuda
 
-# The pip source has been pre-configured to an internal source. Roll back to public sources.
-RUN rm $HOME/.pip/pip.conf
-
 # Install tensorflow-gpu 1.12.0 in the conda environment (pip has been redirected to conda pip)
 RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorflow-gpu==1.12.0 # Run this if in the mainland China
 # RUN pip install tensorflow-gpu==1.12.0
