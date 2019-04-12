@@ -10,6 +10,7 @@ RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple tensorflow-gpu==1.12
 ENV CROSSBOW_HOME /crossbow
 RUN git clone --progress http://github.com/lsds/Crossbow.git crossbow \
     && cd crossbow \
+    && ldconfig \
     && mvn package \
     && cd clib-multigpu \
     && ./genmakefile.sh \
