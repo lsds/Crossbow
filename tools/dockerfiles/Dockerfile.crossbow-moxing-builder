@@ -55,22 +55,4 @@ RUN apt update && apt install -y --no-install-recommends \
         nasm \
         && rm -rf /var/lib/apt/lists/*
 
-ENV CUDA_HOME /usr/local/cuda
-
-# OpenBLAS (TODO: install using apt install)
-RUN git clone --progress https://github.com/xianyi/OpenBLAS.git openblas \
-    && cd openblas \
-    && make -j $(nproc) \
-    && make install
-ENV BLAS_HOME /opt/OpenBLAS
-ENV LD_LIBRARY_PATH $BLAS_HOME/lib:$LD_LIBRARY_PATH
-
-# libjpeg-turbo (TODO: install using apt install)
-RUN git clone --progress https://github.com/libjpeg-turbo/libjpeg-turbo.git \
-    && cd libjpeg-turbo \
-    && cmake -G"Unix Makefiles" && make -j $(nproc)
-ENV JPEG_HOME /libjpeg-turbo
-ENV LD_LIBRARY_PATH $JPEG_HOME/lib:$LD_LIBRARY_PATH
-ENV LD_LIBRARY_PATH $JPEG_HOME:$LD_LIBRARY_PATH
-
 WORKDIR /
