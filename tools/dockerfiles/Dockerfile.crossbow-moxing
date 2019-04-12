@@ -1,6 +1,6 @@
 # CrossBow Docker image based on Huawei ModelArts CUDA 9
 # ModelArts example: https://github.com/huawei-clouds/modelarts-example/blob/master/CustomImage
-FROM swr.cn-north-1.myhuaweicloud.com/eiwizard/custom-gpu-cuda9-inner-moxing-cp36:1.1 as base
+FROM swr.cn-north-1.myhuaweicloud.com/jobmng/custom-gpu-cuda9-inner-moxing-cp36:1.1 as base
 
 # The pip source has been pre-configured to an internal source. Roll back to public sources.
 RUN rm $HOME/.pip/pip.conf
