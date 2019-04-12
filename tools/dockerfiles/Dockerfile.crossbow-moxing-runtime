@@ -1,5 +1,4 @@
-# CrossBow Docker image based on Huawei ModelArts CUDA 9
-# ModelArts example: https://github.com/huawei-clouds/modelarts-example/blob/master/CustomImage
+# ModelArts: https://github.com/huawei-clouds/modelarts-example/blob/master/CustomImage
 FROM swr.cn-north-1.myhuaweicloud.com/eiwizard/custom-gpu-cuda9-cudnn72:1.0-2 as base
 
 ENV CUDA_HOME /usr/local/cuda
