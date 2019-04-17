@@ -13,7 +13,6 @@ import uk.ac.imperial.lsds.crossbow.types.Phase;
 
 public class RecordDataset implements IDataset {
 	
-	@SuppressWarnings("unused")
 	private final static Logger log = LogManager.getLogger (RecordDataset.class);
 	
 	private DatasetMetadata meta;

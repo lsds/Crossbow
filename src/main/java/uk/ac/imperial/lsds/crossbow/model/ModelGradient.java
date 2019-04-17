@@ -2,7 +2,7 @@ package uk.ac.imperial.lsds.crossbow.model;
 
 import uk.ac.imperial.lsds.crossbow.utils.IObjectPool;
 import uk.ac.imperial.lsds.crossbow.utils.Pooled;
-import uk.ac.imperial.lsds.crossbow.utils.TTASLock;
+//import uk.ac.imperial.lsds.crossbow.utils.TTASLock;
 
 public class ModelGradient implements Pooled<ModelGradient> {
 	
@@ -16,7 +16,7 @@ public class ModelGradient implements Pooled<ModelGradient> {
 	
 	private volatile boolean accumulated, retained;
 	
-	private TTASLock mutex;
+//	private TTASLock mutex;
 	
 	private IObjectPool<ModelGradient> pool;
 	
@@ -46,7 +46,7 @@ public class ModelGradient implements Pooled<ModelGradient> {
 		uBatch = -1;
 		accumulated = false;
 		retained = false;
-		mutex = new TTASLock ();
+//		mutex = new TTASLock ();
 		pool = null;	
 	}
 	

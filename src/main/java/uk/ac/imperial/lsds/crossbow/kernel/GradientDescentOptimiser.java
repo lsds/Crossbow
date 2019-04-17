@@ -99,7 +99,7 @@ public class GradientDescentOptimiser extends Kernel {
 		float rate = getLearningRate(batch.getId());
 		log.debug(String.format("Learning rate for batch %d is %5.5f", batch.getId(), rate));
 		
-		Model theModel = model.getBaseModel();
+//		Model theModel = model.getBaseModel();
 		
 		switch(ModelConf.getInstance().getUpdateModel()) {
 		case DEFAULT:

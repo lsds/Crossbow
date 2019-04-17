@@ -139,7 +139,7 @@ public class TrainingResultHandler extends ResultHandler {
 	 */
 	public void freeSlot (int next) {
 		
-		/* preprocess now also accumulates the gradients */
+		/* Preprocess function also accumulates the gradients */
 		preprocess (next);
 
 		/* Try synchronise models */

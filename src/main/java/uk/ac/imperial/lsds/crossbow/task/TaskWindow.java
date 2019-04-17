@@ -87,46 +87,47 @@ class TaskWindow {
 	}
 	
 	private static boolean select (AbstractTask t, Integer replicaId, int clock) {
-		//
+		// 
 		// There are the following basic options:
-		//
+		// 
 		// 1. worker.replica = null, t.access = NONE, task.replica = null; return  true
-		//
+		// 
 		// Neither the worker nor the task is bound to a model, but the task does not 
 		// require any access.
-		//
+		// 
 		// 2. worker.replica = null, t.access = NONE, task.replica = Y; return  true
-		//
+		// 
 		// The worker's replica does not matter; and nor does the task's access type 
 		// since a model is already bound to this task's  pipeline.
-		//
+		// 
 		// 3. worker.replica = null, t.access = R/0 or R/W, task.replica = null; return false
-		//
+		// 
 		// The task cannot be executed.
-		//
+		// 
 		// 4. worker.replica = null, t.access = R/0 or R/W, task.replica = Y; return  true
-		//
+		// 
 		// The worker's replica does not matter (like case 2).
 		// 
 		// 5. worker.replica = X, t.access = NONE, task.replica = null; return true
-		//
+		// 
 		// At this point, we could assign X to be this task's pipeline model replica, 
 		// but we can always bind it later (lazy binding). X is released early.
-		//
+		// 
 		// 6. worker.replica = X, t.access = NONE, task.replica = Y; return true
-		//
+		// 
 		// The worker's replica does not matter. X is released early.
-		//
+		// 
 		// 7. worker.replica = X, t.access = R/0 or R/W, task.replica = null; return (worker.wpc >= t.wpc)
-		//
+		// 
 		// X is bound to this task's pipeline, as long as it has a valid wpc counter: 
 		// the worker's replica wpc should be greater or equal to the task's wpc.
-		//
+		// 
 		// 8. worker.replica = X, t.access = R/0 or R/W, task.replica = Y; return true
-		//
+		// 
 		// The worker's replica does not matter. X is released early.
-		//
+		// 
 		// System.out.println(String.format("[DBG] select: t %04d t.lowerBound=%d t.replica=%s worker.replica=%s clock=%d", t.taskid, t.lowerBound, t.replicaId, replicaId, clock));
+		// 
 		if (t.replicaId == null && t.access.compareTo(ModelAccess.NA) > 0) {
 			// System.out.println(String.format("[DBG] select: t %04d t.replica=%s worker.replica=%s clock=%d", t.taskid, t.replicaId, replicaId, clock));
 			if (replicaId == null) {

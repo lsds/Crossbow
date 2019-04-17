@@ -13,7 +13,7 @@ import uk.ac.imperial.lsds.crossbow.kernel.KernelMemoryRequirements;
 import uk.ac.imperial.lsds.crossbow.model.Model;
 import uk.ac.imperial.lsds.crossbow.model.Shape;
 import uk.ac.imperial.lsds.crossbow.task.Task;
-import uk.ac.imperial.lsds.crossbow.types.DependencyType;
+//import uk.ac.imperial.lsds.crossbow.types.DependencyType;
 import uk.ac.imperial.lsds.crossbow.types.ModelAccess;
 import uk.ac.imperial.lsds.crossbow.types.Phase;
 import uk.ac.imperial.lsds.crossbow.utils.CrossbowArrayList;
@@ -97,23 +97,23 @@ public class SubGraph {
 		}
 	}
 	
-	private void t_level () {
-		int max;
-		DataflowNode node = head;
-		while (node != null) {
-			max = 0;
-			if (node.getPreviousList () != null) {
-				for (DataflowNode upstream: node.getPreviousList()) {
-					if (upstream.getLevel () < 0)
-						throw new IllegalStateException ();
-					if (max < upstream.getLevel () + 1)
-						max = upstream.getLevel () + 1;
-				}
-			}
-			node.setLevel (max);
-			node = node.getNextInTopology();
-		}
-	}
+//	private void t_level () {
+//		int max;
+//		DataflowNode node = head;
+//		while (node != null) {
+//			max = 0;
+//			if (node.getPreviousList () != null) {
+//				for (DataflowNode upstream: node.getPreviousList()) {
+//					if (upstream.getLevel () < 0)
+//						throw new IllegalStateException ();
+//					if (max < upstream.getLevel () + 1)
+//						max = upstream.getLevel () + 1;
+//				}
+//			}
+//			node.setLevel (max);
+//			node = node.getNextInTopology();
+//		}
+//	}
 	
 	/*
 	private void b_level () {
@@ -145,57 +145,57 @@ public class SubGraph {
 	}
 	*/
 	
-	private void branchOut () {
-		
-		DataflowNode node = head;
-		while (node != null) {
-			
-			if (node.getPreviousList () == null) { 
-				/* Assign label to most upstream node */
-				head.setLabel (branch++);
-			}
-			
-			if (node.getNextList () != null) {
-				/* Assign labels to downstream nodes, incrementing by 1 on every branch */
-				/*
-				DataflowNode theOne = null;
-				for (DataflowNode downstream: node.getNextList()) {
-					if ((theOne == null) || (theOne.getLevel() > downstream.getLevel()))
-							theOne = downstream;
-				}
-				*/
-				boolean first = true;
-				for (DataflowNode downstream: node.getNextList()) {
-					/*
-					if (downstream == theOne) {
-						downstream.setLabel(node.getLabel());
-					}
-					*/
-					if (first) {
-						downstream.setLabel(node.getLabel());
-						first = false;
-					}
-					else {
-						/*
-						 * Note that some branches just denote
-						 * dependencies between kernels.
-						 * 
-						 * For example:
-						 * 
-						 * A -> B
-						 * A -> C
-						 * B -> C
-						 * 
-						 * In such cases, we don't increment `maxlabels`
-						 */
-						if (downstream.getPreviousList().size() == 1)
-							downstream.setLabel(branch ++);
-					}
-				}
-			}
-			node = node.getNextInTopology();
-		}
-	}
+//	private void branchOut () {
+//		
+//		DataflowNode node = head;
+//		while (node != null) {
+//			
+//			if (node.getPreviousList () == null) { 
+//				/* Assign label to most upstream node */
+//				head.setLabel (branch++);
+//			}
+//			
+//			if (node.getNextList () != null) {
+//				/* Assign labels to downstream nodes, incrementing by 1 on every branch */
+//				/*
+//				DataflowNode theOne = null;
+//				for (DataflowNode downstream: node.getNextList()) {
+//					if ((theOne == null) || (theOne.getLevel() > downstream.getLevel()))
+//							theOne = downstream;
+//				}
+//				*/
+//				boolean first = true;
+//				for (DataflowNode downstream: node.getNextList()) {
+//					/*
+//					if (downstream == theOne) {
+//						downstream.setLabel(node.getLabel());
+//					}
+//					*/
+//					if (first) {
+//						downstream.setLabel(node.getLabel());
+//						first = false;
+//					}
+//					else {
+//						/*
+//						 * Note that some branches just denote
+//						 * dependencies between kernels.
+//						 * 
+//						 * For example:
+//						 * 
+//						 * A -> B
+//						 * A -> C
+//						 * B -> C
+//						 * 
+//						 * In such cases, we don't increment `maxlabels`
+//						 */
+//						if (downstream.getPreviousList().size() == 1)
+//							downstream.setLabel(branch ++);
+//					}
+//				}
+//			}
+//			node = node.getNextInTopology();
+//		}
+//	}
 	
 	public DataflowNode getDataflowNode () {
 		return head;
@@ -551,27 +551,27 @@ public class SubGraph {
 		}
 	}
 	
-	private void __register_dataflow_dependency_graph () {
-		
-		DataflowNode next = head;
-		
-		while (next != null) {
-			
-			TheGPU.getInstance().setDataflowStream (id, next.getOrder(), next.getLabel());
-			CrossbowArrayList<DataflowNode> upstreams = next.getPreviousList();
-			if (upstreams != null) {
-				/* Iterate over upstream dataflow nodes */
-				for (DataflowNode prev: upstreams) {
-					if (next.getLabel() != prev.getLabel()) {
-						/* Operator `prev` must end before operator `next` starts */
-						TheGPU.getInstance().setDataflowDependency(id, next.getOrder(), DependencyType.END_BEFORE_START.getId(), prev.getOrder(), true);
-					}
-				}
-			}
-			
-			next = next.getNextInTopology();
-		}
-	}
+//	private void __register_dataflow_dependency_graph () {
+//		
+//		DataflowNode next = head;
+//		
+//		while (next != null) {
+//			
+//			TheGPU.getInstance().setDataflowStream (id, next.getOrder(), next.getLabel());
+//			CrossbowArrayList<DataflowNode> upstreams = next.getPreviousList();
+//			if (upstreams != null) {
+//				/* Iterate over upstream dataflow nodes */
+//				for (DataflowNode prev: upstreams) {
+//					if (next.getLabel() != prev.getLabel()) {
+//						/* Operator `prev` must end before operator `next` starts */
+//						TheGPU.getInstance().setDataflowDependency(id, next.getOrder(), DependencyType.END_BEFORE_START.getId(), prev.getOrder(), true);
+//					}
+//				}
+//			}
+//			
+//			next = next.getNextInTopology();
+//		}
+//	}
 	
 	public String dump () {
 		StringBuilder s = new StringBuilder (String.format("[%s: %d operators (access: %s)] ", 

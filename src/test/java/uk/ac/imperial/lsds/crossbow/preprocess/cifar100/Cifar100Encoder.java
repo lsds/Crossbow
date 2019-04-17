@@ -91,7 +91,7 @@ public class Cifar100Encoder extends Encoder {
 						meanImage = ByteBuffer.allocate(example.size()).order(ByteOrder.LITTLE_ENDIAN);
 				}
 				
-				int _coarse_label = input.get () & 0xFF;
+//				int _coarse_label = input.get () & 0xFF;
 				int   _fine_label = input.get () & 0xFF;
 				// System.out.println("Label is " + _label);
 				label.getBuffer ().putInt (_fine_label);

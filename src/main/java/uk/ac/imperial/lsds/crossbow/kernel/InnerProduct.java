@@ -159,7 +159,7 @@ public class InnerProduct extends Kernel {
 		if (previous != null && previous.length > 1)
 			throw new IllegalArgumentException (String.format("error: invalid number of inputs for operator %s", operator.getName()));
 		
-		int prev;
+//		int prev;
 		
 		/* GEMM variables */
 		int M, N, K;

@@ -952,7 +952,7 @@ public class ResNetv1 {
 		
 		String datasetName = options.getOption("--dataset-name").getStringValue();
 		int layers         = Integer.parseInt(options.getOption("--layers").getStringValue());
-		int batch_size     = ModelConf.getInstance().getBatchSize();
+//		int batch_size     = ModelConf.getInstance().getBatchSize();
 		
 		SolverConf solverConf = ModelConf.getInstance().getSolverConf ();
 		

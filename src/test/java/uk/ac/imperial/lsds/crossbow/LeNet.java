@@ -31,7 +31,7 @@ import uk.ac.imperial.lsds.crossbow.kernel.conf.SoftMaxConf;
 import uk.ac.imperial.lsds.crossbow.kernel.conf.SolverConf;
 import uk.ac.imperial.lsds.crossbow.model.InitialiserConf;
 import uk.ac.imperial.lsds.crossbow.preprocess.DatasetUtils;
-import uk.ac.imperial.lsds.crossbow.types.DurationUnit;
+//import uk.ac.imperial.lsds.crossbow.types.DurationUnit;
 import uk.ac.imperial.lsds.crossbow.types.InitialiserType;
 import uk.ac.imperial.lsds.crossbow.types.LearningRateDecayPolicy;
 import uk.ac.imperial.lsds.crossbow.types.Phase;

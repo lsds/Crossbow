@@ -163,7 +163,10 @@ public class ConvGradient extends Kernel {
 		IDataBuffer weightGradientBuffer, biasGradientBuffer = null;
 
 		IDataBuffer inputDataBuffer, peerInputBuffer, outputDataBuffer;
-		int inputStartP, inputEndP, peerInputStartP, peerInputEndP;
+		int inputStartP, 
+			// inputEndP, 
+			peerInputStartP;
+			// peerInputEndP;
 
 		int axis, filters, channels, batchsize;
 
@@ -172,7 +175,7 @@ public class ConvGradient extends Kernel {
 		/* Get input buffer */
 		inputDataBuffer = getCurrentInput (batch, api);
 		inputStartP = getStartPointer ();
-		inputEndP = getEndPointer ();
+//		inputEndP = getEndPointer ();
 
         /* Prepare buffers for gradients: weightGradientBuffer & biasGradientBuffer */
         ModelGradient gradient = batch.getModelGradient(model);
@@ -195,15 +198,15 @@ public class ConvGradient extends Kernel {
 		int convOpId = operator.getPeer().getId();
 
 		Variable weights = model.getVariable(convOpId, 1);
-        Variable bias = null;
-        if (conf.hasBias()) {
-            bias = model.getVariable(convOpId, 2);
-        }
+//        Variable bias = null;
+//        if (conf.hasBias()) {
+//            bias = model.getVariable(convOpId, 2);
+//        }
 
 		/* Get the input of conv operator */
         peerInputBuffer = getPeerInput (batch, api);
 		peerInputStartP = getStartPointer ();
-		peerInputEndP = getEndPointer ();
+		// peerInputEndP = getEndPointer ();
 
         Variable [] input  = theInput.get(); 
         Variable [] output = theOutput.get();

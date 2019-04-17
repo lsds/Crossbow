@@ -8,28 +8,28 @@ import uk.ac.imperial.lsds.crossbow.cli.Options;
 import uk.ac.imperial.lsds.crossbow.kernel.Accuracy;
 import uk.ac.imperial.lsds.crossbow.kernel.BatchNorm;
 import uk.ac.imperial.lsds.crossbow.kernel.BatchNormGradient;
-import uk.ac.imperial.lsds.crossbow.kernel.Conv;
-import uk.ac.imperial.lsds.crossbow.kernel.ConvGradient;
-import uk.ac.imperial.lsds.crossbow.kernel.Dropout;
-import uk.ac.imperial.lsds.crossbow.kernel.DropoutGradient;
+//import uk.ac.imperial.lsds.crossbow.kernel.Conv;
+//import uk.ac.imperial.lsds.crossbow.kernel.ConvGradient;
+//import uk.ac.imperial.lsds.crossbow.kernel.Dropout;
+//import uk.ac.imperial.lsds.crossbow.kernel.DropoutGradient;
 import uk.ac.imperial.lsds.crossbow.kernel.GradientDescentOptimiser;
 import uk.ac.imperial.lsds.crossbow.kernel.InnerProduct;
 import uk.ac.imperial.lsds.crossbow.kernel.InnerProductGradient;
-import uk.ac.imperial.lsds.crossbow.kernel.Pool;
-import uk.ac.imperial.lsds.crossbow.kernel.PoolGradient;
-import uk.ac.imperial.lsds.crossbow.kernel.ReLU;
-import uk.ac.imperial.lsds.crossbow.kernel.ReLUGradient;
+//import uk.ac.imperial.lsds.crossbow.kernel.Pool;
+//import uk.ac.imperial.lsds.crossbow.kernel.PoolGradient;
+//import uk.ac.imperial.lsds.crossbow.kernel.ReLU;
+//import uk.ac.imperial.lsds.crossbow.kernel.ReLUGradient;
 import uk.ac.imperial.lsds.crossbow.kernel.SoftMax;
 import uk.ac.imperial.lsds.crossbow.kernel.SoftMaxLoss;
 import uk.ac.imperial.lsds.crossbow.kernel.SoftMaxLossGradient;
 import uk.ac.imperial.lsds.crossbow.kernel.conf.AccuracyConf;
 import uk.ac.imperial.lsds.crossbow.kernel.conf.BatchNormConf;
 import uk.ac.imperial.lsds.crossbow.kernel.conf.ConvConf;
-import uk.ac.imperial.lsds.crossbow.kernel.conf.DropoutConf;
+//import uk.ac.imperial.lsds.crossbow.kernel.conf.DropoutConf;
 import uk.ac.imperial.lsds.crossbow.kernel.conf.InnerProductConf;
 import uk.ac.imperial.lsds.crossbow.kernel.conf.LossConf;
-import uk.ac.imperial.lsds.crossbow.kernel.conf.PoolConf;
-import uk.ac.imperial.lsds.crossbow.kernel.conf.ReLUConf;
+//import uk.ac.imperial.lsds.crossbow.kernel.conf.PoolConf;
+//import uk.ac.imperial.lsds.crossbow.kernel.conf.ReLUConf;
 import uk.ac.imperial.lsds.crossbow.kernel.conf.SoftMaxConf;
 import uk.ac.imperial.lsds.crossbow.kernel.conf.SolverConf;
 import uk.ac.imperial.lsds.crossbow.model.InitialiserConf;
@@ -142,7 +142,7 @@ public class LeNetBatchNorm {
 		normConf.setWeightInitialiser (new InitialiserConf().setType(InitialiserType.CONSTANT).setValue(1));
 		normConf.setBiasInitialiser   (new InitialiserConf().setType(InitialiserType.CONSTANT).setValue(0));
 		
-		PoolConf poolConf1 = new PoolConf ().setKernelSize (2).setStrideSize (2).setPaddingSize (0);
+//		PoolConf poolConf1 = new PoolConf ().setKernelSize (2).setStrideSize (2).setPaddingSize (0);
 		
 		ConvConf convConf2 = new ConvConf ();
 		
@@ -157,7 +157,7 @@ public class LeNetBatchNorm {
 			convConf2.setBiasInitialiser   (new InitialiserConf ().setType (InitialiserType.CONSTANT).setValue(0.1F));
 		}
 
-		PoolConf poolConf2 = new PoolConf ().setKernelSize (2).setStrideSize (2).setPaddingSize (0);
+//		PoolConf poolConf2 = new PoolConf ().setKernelSize (2).setStrideSize (2).setPaddingSize (0);
 		
 		InnerProductConf ipConf1 = new InnerProductConf();
 		
@@ -171,9 +171,9 @@ public class LeNetBatchNorm {
 			ipConf1.setBiasInitialiser   (new InitialiserConf ().setType (InitialiserType.CONSTANT).setValue(0.1F));
 		}
 				
-		ReLUConf reluConf = new ReLUConf ();
-		
-		DropoutConf dropoutConf = new DropoutConf ().setRatio(0.5F);
+//		ReLUConf reluConf = new ReLUConf ();
+//		
+//		DropoutConf dropoutConf = new DropoutConf ().setRatio(0.5F);
 		
 		InnerProductConf ipConf2 = new InnerProductConf ();
 		
@@ -193,29 +193,29 @@ public class LeNetBatchNorm {
 		
 		SolverConf solverConf = ModelConf.getInstance().getSolverConf();
 		
-		DataflowNode           conv1 = new DataflowNode (new Operator (                "Conv", new                     Conv (   convConf1)));
+//		DataflowNode           conv1 = new DataflowNode (new Operator (                "Conv", new                     Conv (   convConf1)));
 		DataflowNode           batchnorm = new DataflowNode (new Operator (                "BatchNorm", new                     BatchNorm (   normConf)));
 		
-		DataflowNode           pool1 = new DataflowNode (new Operator (                "Pool", new                     Pool (   poolConf1)));
-		DataflowNode           conv2 = new DataflowNode (new Operator (                "Conv", new                     Conv (   convConf2)));
-		DataflowNode           pool2 = new DataflowNode (new Operator (                "Pool", new                     Pool (   poolConf2)));
-		DataflowNode             ip1 = new DataflowNode (new Operator (        "InnerProduct", new             InnerProduct (     ipConf1)));
-		DataflowNode            relu = new DataflowNode (new Operator (                "ReLU", new                     ReLU (    reluConf)));
-		DataflowNode         dropout = new DataflowNode (new Operator (             "Dropout", new                  Dropout ( dropoutConf)));
+//		DataflowNode           pool1 = new DataflowNode (new Operator (                "Pool", new                     Pool (   poolConf1)));
+//		DataflowNode           conv2 = new DataflowNode (new Operator (                "Conv", new                     Conv (   convConf2)));
+//		DataflowNode           pool2 = new DataflowNode (new Operator (                "Pool", new                     Pool (   poolConf2)));
+//		DataflowNode             ip1 = new DataflowNode (new Operator (        "InnerProduct", new             InnerProduct (     ipConf1)));
+//		DataflowNode            relu = new DataflowNode (new Operator (                "ReLU", new                     ReLU (    reluConf)));
+//		DataflowNode         dropout = new DataflowNode (new Operator (             "Dropout", new                  Dropout ( dropoutConf)));
 		DataflowNode             ip2 = new DataflowNode (new Operator (        "InnerProduct", new             InnerProduct (     ipConf2)));
 		DataflowNode         softmax = new DataflowNode (new Operator (             "SoftMax", new                  SoftMax ( softMaxConf)));
 		DataflowNode            loss = new DataflowNode (new Operator (                "Loss", new              SoftMaxLoss (    lossConf)));
 		DataflowNode    lossGradient = new DataflowNode (new Operator (        "LossGradient", new      SoftMaxLossGradient (    lossConf)).setPeer (   loss.getOperator()));
 		DataflowNode     ipGradient2 = new DataflowNode (new Operator ("InnerProductGradient", new     InnerProductGradient (     ipConf2)).setPeer (    ip2.getOperator()));
-		DataflowNode dropoutGradient = new DataflowNode (new Operator (     "DropoutGradient", new          DropoutGradient ( dropoutConf)).setPeer (dropout.getOperator()));
-		DataflowNode    reluGradient = new DataflowNode (new Operator (        "ReLUGradient", new             ReLUGradient (    reluConf)).setPeer (   relu.getOperator()));
-		DataflowNode     ipGradient1 = new DataflowNode (new Operator ("InnerProductGradient", new     InnerProductGradient (     ipConf1)).setPeer (    ip1.getOperator()));
-		DataflowNode   poolGradient2 = new DataflowNode (new Operator (        "PoolGradient", new             PoolGradient (   poolConf2)).setPeer (  pool2.getOperator()));
-		DataflowNode   convGradient2 = new DataflowNode (new Operator (        "ConvGradient", new             ConvGradient (   convConf2)).setPeer (  conv2.getOperator()));
-		DataflowNode   poolGradient1 = new DataflowNode (new Operator (        "PoolGradient", new             PoolGradient (   poolConf1)).setPeer (  pool1.getOperator()));
+//		DataflowNode dropoutGradient = new DataflowNode (new Operator (     "DropoutGradient", new          DropoutGradient ( dropoutConf)).setPeer (dropout.getOperator()));
+//		DataflowNode    reluGradient = new DataflowNode (new Operator (        "ReLUGradient", new             ReLUGradient (    reluConf)).setPeer (   relu.getOperator()));
+//		DataflowNode     ipGradient1 = new DataflowNode (new Operator ("InnerProductGradient", new     InnerProductGradient (     ipConf1)).setPeer (    ip1.getOperator()));
+//		DataflowNode   poolGradient2 = new DataflowNode (new Operator (        "PoolGradient", new             PoolGradient (   poolConf2)).setPeer (  pool2.getOperator()));
+//		DataflowNode   convGradient2 = new DataflowNode (new Operator (        "ConvGradient", new             ConvGradient (   convConf2)).setPeer (  conv2.getOperator()));
+//		DataflowNode   poolGradient1 = new DataflowNode (new Operator (        "PoolGradient", new             PoolGradient (   poolConf1)).setPeer (  pool1.getOperator()));
 		DataflowNode   batchNormGradient = new DataflowNode (new Operator (        "BatchNormGradient", new             BatchNormGradient (   normConf)).setPeer (  batchnorm.getOperator()));
 		
-		DataflowNode   convGradient1 = new DataflowNode (new Operator (        "ConvGradient", new             ConvGradient (   convConf1)).setPeer (  conv1.getOperator()));
+//		DataflowNode   convGradient1 = new DataflowNode (new Operator (        "ConvGradient", new             ConvGradient (   convConf1)).setPeer (  conv1.getOperator()));
 		DataflowNode       optimiser = new DataflowNode (new Operator (           "Optimiser", new GradientDescentOptimiser (  solverConf)));
 		DataflowNode        accuracy = new DataflowNode (new Operator (            "Accuracy", new                 Accuracy (accuracyConf)));
 		
@@ -232,13 +232,13 @@ public class LeNetBatchNorm {
 		
 		/* Testing */
 		
-		DataflowNode           _conv1 = conv1.shallowCopy();
+//		DataflowNode           _conv1 = conv1.shallowCopy();
 		DataflowNode           _batchnorm = batchnorm.shallowCopy();
-		DataflowNode           _pool1 = pool1.shallowCopy();
-		DataflowNode           _conv2 = conv2.shallowCopy();
-		DataflowNode           _pool2 = pool2.shallowCopy();
-		DataflowNode             _ip1 = ip1.shallowCopy();
-		DataflowNode            _relu = relu.shallowCopy();
+//		DataflowNode           _pool1 = pool1.shallowCopy();
+//		DataflowNode           _conv2 = conv2.shallowCopy();
+//		DataflowNode           _pool2 = pool2.shallowCopy();
+//		DataflowNode             _ip1 = ip1.shallowCopy();
+//		DataflowNode            _relu = relu.shallowCopy();
 		DataflowNode             _ip2 = ip2.shallowCopy();
 		DataflowNode         _softmax = softmax.shallowCopy();
 		DataflowNode        _accuracy = accuracy.shallowCopy();

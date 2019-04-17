@@ -11,7 +11,7 @@ import uk.ac.imperial.lsds.crossbow.types.InitialiserType;
 import uk.ac.imperial.lsds.crossbow.types.LearningRateDecayPolicy;
 import uk.ac.imperial.lsds.crossbow.types.Phase;
 import uk.ac.imperial.lsds.crossbow.types.PoolMethod;
-import uk.ac.imperial.lsds.crossbow.types.TrainingUnit;
+//import uk.ac.imperial.lsds.crossbow.types.TrainingUnit;
 
 public class BabyResNet {
 
@@ -398,8 +398,8 @@ public class BabyResNet {
 		int __batch_size = 128;
 		int __wpc = 1000000;
 		
-		int __N = 1000;
-		TrainingUnit __unit = TrainingUnit.TASKS;
+//		int __N = 1000;
+//		TrainingUnit __unit = TrainingUnit.TASKS;
 		int __display_interval = 100;
 		
 		float __learning_rate = 0.01F;
@@ -433,12 +433,12 @@ public class BabyResNet {
 			if (args[i].equals("--number-of-callback-handlers")) {
 				__number_of_callback_handlers = Integer.parseInt(args[j]);
 			} else
-			if (args[i].equals("--unit")) {
-				__unit = TrainingUnit.fromString(args[j]);
-			} else
-			if (args[i].equals("--N")) {
-				__N = Integer.parseInt(args[j]);
-			} else
+//			if (args[i].equals("--unit")) {
+//				__unit = TrainingUnit.fromString(args[j]);
+//			} else
+//			if (args[i].equals("--N")) {
+//				__N = Integer.parseInt(args[j]);
+//			} else
 			if (args[i].equals("--display-interval")) {
 				__display_interval = Integer.parseInt(args[j]);
 			} else

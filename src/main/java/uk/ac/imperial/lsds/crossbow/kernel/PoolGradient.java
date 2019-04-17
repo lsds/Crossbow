@@ -247,7 +247,7 @@ public class PoolGradient extends Kernel {
         int   buttomdiffBufferIndex, topdiffBufferIndex;
         float bottomdiffValue, topdiffValue;
 
-        IDataBuffer outputDataBuffer, inputDataBuffer, poolIndexBuffer, peerInputBuffer;
+        IDataBuffer outputDataBuffer, inputDataBuffer, poolIndexBuffer; // , peerInputBuffer;
         int inputStartP, peerInputStartP;
 
         float topdiff_val ;
@@ -270,7 +270,7 @@ public class PoolGradient extends Kernel {
         outputDataBuffer.bzero();
 
         /* Get the start of the input of pooling operator i.e. bottom */
-        peerInputBuffer = getPeerInput (batch, api);
+//        peerInputBuffer = getPeerInput (batch, api);
 		peerInputStartP = getStartPointer ();
 
         /*

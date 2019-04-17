@@ -198,7 +198,6 @@ public class Batch {
 			while (! outputs[i].isEmpty()) {
 				IDataBuffer b = outputs[i].removeFirst();
 				if (b.referenceCountDecrementAndGet() == 0) {
-					/* System.out.println("Return buffer to pool..."); */
 					b.free();
 				}
 			}

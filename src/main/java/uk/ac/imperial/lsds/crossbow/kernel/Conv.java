@@ -381,7 +381,7 @@ public class Conv extends Kernel {
 		/* Get input buffer */
 		IDataBuffer inputDataBuffer = getCurrentInput (batch, api);
 		int inputStartP = getStartPointer ();
-		int inputEndP = getEndPointer ();
+//		int inputEndP = getEndPointer ();
 		
 		/* Get an output buffer */
 		IDataBuffer outputDataBuffer = getCurrentOutput (batch, api);

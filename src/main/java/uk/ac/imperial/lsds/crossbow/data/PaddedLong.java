@@ -1,4 +1,5 @@
 package uk.ac.imperial.lsds.crossbow.data;
+
 public class PaddedLong {
 	
 	public long value;
