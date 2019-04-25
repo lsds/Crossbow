@@ -20,6 +20,8 @@ typedef struct crossbow_solver_configuration {
 	int *steps;
 	int step;
 
+	int warmuptasks;
+
 	unsigned irregular;
 
 	float momentum;

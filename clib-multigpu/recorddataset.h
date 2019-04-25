@@ -1,6 +1,8 @@
 #ifndef __CROSSBOW_RECORD_DATASET_H_
 #define __CROSSBOW_RECORD_DATASET_H_
 
+#include "utils.h"
+
 #include "doublebuffer.h"
 #include "image/recordreader.h"
 
@@ -8,6 +10,8 @@
 
 typedef struct crossbow_record_dataset *crossbowRecordDatasetP;
 typedef struct crossbow_record_dataset {
+	
+	crossbowPhase_t phi;
 
 	/* Pointer to images and labels buffer */
 	void *images;
@@ -19,13 +23,12 @@ typedef struct crossbow_record_dataset {
 	crossbowDoubleBufferP buffer;
 
 	/* Create worker thread */
-
 	volatile int exit;
 	int exited;
-
+	
 	pthread_mutex_t lock;
 	pthread_cond_t cond;
-
+	
 	crossbowListP events;
 
 	pthread_t thread;
@@ -37,7 +40,7 @@ typedef struct crossbow_record_dataset_event {
 	int idx;
 } crossbow_record_dataset_event_t;
 
-crossbowRecordDatasetP crossbowRecordDatasetCreate (int, int *, int, int, int *);
+crossbowRecordDatasetP crossbowRecordDatasetCreate (int, int *, int, int, int *, crossbowPhase_t);
 
 void crossbowRecordDatasetInit (crossbowRecordDatasetP);
 

@@ -32,6 +32,8 @@ void *crossbowListPeekTail (crossbowListP);
 
 void *crossbowListRemoveFirst (crossbowListP);
 
+void crossbowListShuffle (crossbowListP);
+
 void crossbowListIteratorReset (crossbowListP);
 unsigned crossbowListIteratorHasNext (crossbowListP);
 void *crossbowListIteratorNext (crossbowListP);

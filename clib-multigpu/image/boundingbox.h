@@ -11,6 +11,8 @@ typedef struct crossbow_bbox {
 
 crossbowBoundingBoxP crossbowBoundingBoxCreate ();
 
+unsigned crossbowBoundingBoxIsValid (crossbowBoundingBoxP);
+
 void crossbowBoundingBoxFree (crossbowBoundingBoxP);
 
 #endif /* __CROSSBOW_BBOX_H_ */

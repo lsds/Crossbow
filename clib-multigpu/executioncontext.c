@@ -1457,10 +1457,10 @@ void crossbowExecutionContextSetDataflowStream (crossbowExecutionContextP ctx, i
 
 void crossbowExecutionContextSetDataflowDependency (crossbowExecutionContextP ctx, int id, int ord, 
 	int jtype, int guard, unsigned internal) {
-	crossbowOperatorDependency_t type;
+	crossbowOperatorDependency_t type = START_BEFORE_START;
 	/* Operator `guard` must start or end before operator `ord` starts. */
 	switch (jtype) {
-	case 0: type = START_BEFORE_START;
+	case 0: type = START_BEFORE_START; break;
 	case 1: type =   END_BEFORE_START;
 	}
 	crossbowDataflowP dataflow = crossbowArrayListGet (ctx->dataflows, id);
@@ -1663,11 +1663,12 @@ void crossbowExecutionContextSetLearningRateDecayPolicyStep (crossbowExecutionCo
 	return;
 }
 
-void crossbowExecutionContextSetLearningRateDecayPolicyMultiStep (crossbowExecutionContextP ctx, float learningRate, double gamma, int argc, int* argv) {
+void crossbowExecutionContextSetLearningRateDecayPolicyMultiStep (crossbowExecutionContextP ctx, float learningRate, double gamma, int warmuptasks, int argc, int* argv) {
 	int i;
-	ctx->theModel->conf->learningRateDecayPolicy = MULTISTEP;
+	ctx->theModel->conf->learningRateDecayPolicy = ((warmuptasks > 0) ? LSR : MULTISTEP);
 	ctx->theModel->conf->learningRate = learningRate;
 	ctx->theModel->conf->gamma = gamma;
+	ctx->theModel->conf->warmuptasks = warmuptasks;
 	ctx->theModel->conf->numberofsteps = argc;
 	ctx->theModel->conf->steps = crossbowMalloc (argc * sizeof(int));
 	for (i = 0; i < argc; ++i)
@@ -3900,7 +3901,7 @@ int crossbowExecutionContextDelModel (crossbowExecutionContextP ctx) {
 
 void crossbowExecutionContextRecordDatasetInit (crossbowExecutionContextP ctx, int phase, int workers, int *capacity, int NB, int b, int *padding) {
 	invalidConditionException ((! ctx->dataset[phase]));
-	ctx->dataset[phase] = crossbowRecordDatasetCreate (workers, capacity, NB, b, padding);
+	ctx->dataset[phase] = crossbowRecordDatasetCreate (workers, capacity, NB, b, padding, phase);
 	return;
 }
 

@@ -2,7 +2,7 @@ package uk.ac.imperial.lsds.crossbow.types;
 
 public enum LearningRateDecayPolicy {
 	
-	FIXED(0), INV(1), STEP(2), MULTISTEP(3), EXP(4), CLR(5);
+	FIXED(0), INV(1), STEP(2), MULTISTEP(3), LSR(4), EXP(5), CLR(6);
 	
 	private int id;
 	
@@ -20,8 +20,9 @@ public enum LearningRateDecayPolicy {
 		case 1: return "INV";
 		case 2: return "STEP";
 		case 3: return "MULTISTEP";
-		case 4: return "EXP";
-		case 5: return "CLR";
+		case 4: return "LSR";
+		case 5: return "EXP";
+		case 6: return "CLR";
 		default:
 			throw new IllegalArgumentException ("error: invalid synchronisation model type");
 		}
@@ -32,6 +33,7 @@ public enum LearningRateDecayPolicy {
 		else if (policy.toUpperCase().equals("INV"))       return INV;
 		else if (policy.toUpperCase().equals("STEP"))      return STEP;
 		else if (policy.toUpperCase().equals("MULTISTEP")) return MULTISTEP;
+		else if (policy.toUpperCase().equals("LSR"))       return LSR;
 		else if (policy.toUpperCase().equals("EXP"))       return EXP;
 		else if (policy.toUpperCase().equals("CLR"))       return CLR;
 		else

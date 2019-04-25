@@ -149,7 +149,9 @@ INCLUDES := -I/usr/include -D_GNU_SOURCE
 INCLUDES += -I\$(CUDA_PATH)/include
 
 # OpenBLAS
-INCLUDES += -I\$(BLAS_PATH)/include
+ifneq (\$(BLAS_PATH),)
+	INCLUDES += -I\$(BLAS_PATH)/include
+endif
 
 # NCCL
 ifneq (\$(NCCL_PATH),)
@@ -157,7 +159,9 @@ ifneq (\$(NCCL_PATH),)
 endif
 
 # Turbo-JPEG
-INCLUDES += -I\$(JPEG_PATH)
+ifneq (\$(JPEG_PATH),)
+	INCLUDES += -I\$(JPEG_PATH)
+endif
 
 # JNI
 ifeq (\$(OS),Darwin)

@@ -1,13 +1,16 @@
+# Makefile for Crossbow C/C++ library
+# Customised for platypus2 running Linux on Tue  9 Apr 16:57:23 UTC 2019
+#
+OS = Linux
+CUDA_PATH := /usr/local/cuda
+JAVA_PATH := /usr/lib/jvm/java-1.8.0-openjdk-amd64
+BLAS_PATH := /opt/OpenBLAS
+NCCL_PATH := 
+JPEG_PATH := /home/akolious/libjpeg-turbo
+CBOW_PATH := /home/akolious/crossbow
+
 CLASS_PATH := ../target/classes
 vpath %.class $(CLASS_PATH)
-
-CUDA_PATH := /usr/local/cuda
-BLAS_PATH := /opt/OpenBLAS
-NCCL_PATH := /home/akolious/nccl/nccl-2.1.15
-JPEG_PATH := /home/akolious/libjpeg-turbo
-JAVA_PATH := /usr/lib/jvm/java-8-oracle
-# Note: for Java 7, use: /usr/lib/jvm/java-7-openjdk-amd64/ 
-CBOW_PATH := /home/akolious/pre-release
 
 ARCH := $(shell uname -m)
 ifneq (,$(filter $(ARCH),x86_64))
@@ -65,13 +68,19 @@ INCLUDES := -I/usr/include -D_GNU_SOURCE
 INCLUDES += -I$(CUDA_PATH)/include
 
 # OpenBLAS
-INCLUDES += -I$(BLAS_PATH)/include
+ifneq ($(BLAS_PATH),)
+	INCLUDES += -I$(BLAS_PATH)/include
+endif
 
 # NCCL
-INCLUDES += -I$(NCCL_PATH)/include
+ifneq ($(NCCL_PATH),)
+	INCLUDES += -I$(NCCL_PATH)/include
+endif
 
 # Turbo-JPEG
-INCLUDES += -I$(JPEG_PATH)
+ifneq ($(JPEG_PATH),)
+	INCLUDES += -I$(JPEG_PATH)
+endif
 
 # JNI
 ifeq ($(OS),Darwin)
@@ -98,7 +107,11 @@ LIBS += -L$(CUDA_PATH)/lib$(POSTFIX) -lcudart -lcublas -lcudnn -lcurand -lnvTool
 LIBS += -L$(BLAS_PATH)/lib -lopenblas
 
 # NCCL
-LIBS += -L$(NCCL_PATH)/lib -lnccl
+ifneq ($(NCCL_PATH),)
+	LIBS += -L$(NCCL_PATH)/lib -lnccl
+else
+	LIBS += -lnccl
+endif
 
 # PTX code generation
 #
@@ -170,7 +183,7 @@ random/generator.o: random/generator.cpp random/generator.hpp
 	$(CPP) $(INCLUDES) -W -Wall -DWARNING -fPIC -Wno-unused-function -c $< -o $@
 	
 dataset.o: dataset.c uk_ac_imperial_lsds_crossbow_device_dataset_DatasetMemoryManager.h
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@ 
+	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
 
 datasetfilemanager.o: datasetfilemanager.c datasetfilemanager.h $(CROSSBOWBASEINCLUDES)
 	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
@@ -191,7 +204,7 @@ memoryregistry.o: memoryregistry.c memoryregistry.h memoryregistrynode.h $(CROSS
 	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
 	
 lightweightdataset.o: lightweightdataset.c uk_ac_imperial_lsds_crossbow_device_dataset_LightWeightDatasetMemoryManager.h
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@ 
+	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
 
 lightweightdatasetmanager.o: lightweightdatasetmanager.c lightweightdatasetmanager.h $(CROSSBOWBASEINCLUDES)
 	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
@@ -522,3 +535,4 @@ clean:
 	rm -f image/testrecordreader
 	rm -f image/testbatchreader
 	rm -f testrecorddataset
+

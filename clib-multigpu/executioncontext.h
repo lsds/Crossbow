@@ -234,7 +234,7 @@ void crossbowExecutionContextSetLearningRateDecayPolicyInv (crossbowExecutionCon
 
 void crossbowExecutionContextSetLearningRateDecayPolicyStep (crossbowExecutionContextP, float, double, int);
 
-void crossbowExecutionContextSetLearningRateDecayPolicyMultiStep (crossbowExecutionContextP, float, double, int, int *);
+void crossbowExecutionContextSetLearningRateDecayPolicyMultiStep (crossbowExecutionContextP, float, double, int, int, int *);
 
 void crossbowExecutionContextSetLearningRateDecayPolicyExp (crossbowExecutionContextP, float, double);
 

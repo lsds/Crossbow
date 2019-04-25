@@ -10,6 +10,8 @@
 #include "record.h"
 #include "recordreader.h"
 
+#include "yarng.h"
+
 #include "../timer.h"
 
 #define USAGE "./testbatchreader [-d directory] [-s subset] [-n files] [-v level]"
@@ -18,38 +20,10 @@
  * Perform the kind of pre-processing for test images
  */
 static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
-
-	crossbowImageCast (record->image);
-
-	/* Resize image */
-
-	float h = (float) crossbowImageInputHeight (record->image);
-	float w = (float) crossbowImageInputWidth  (record->image);
-
-	float factor = 1.15;
-
-	float ratio = max(224. / h, 224. / w);
-
-	int resizeheight = (int) (h * ratio * factor);
-	int resizewidth  = (int) (w * ratio * factor);
 	
-	if (verbose > 0)
-		printf("Resized image to (%d x %d)\n", resizeheight, resizewidth);
-
-	crossbowImageResize (record->image, resizeheight, resizewidth);
+	(void) record;
+	(void) verbose;
 	
-	if (verbose > 0)
-		printf("Checksum of resized image is %.4f\n", crossbowImageChecksum (record->image));
-
-	/* Crop image */
-
-	int top  = (resizeheight - 224) / 2;
-	int left = (resizewidth  - 224) / 2;
-
-	crossbowImageCrop (record->image, 224, 224, top, left);
-	
-	if (verbose > 0)
-		printf("Checksum of cropped image is %.4f\n", crossbowImageChecksum (record->image));
 	return;
 }
 
@@ -57,51 +31,10 @@ static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
  * Perform the kind of pre-processing for training images
  */
 static void preprocessTrainingRecord (crossbowRecordP record) {
-
-	crossbowImageCast (record->image);
-
-	/*
-	 * Sample bounding box:
-	 *
-	 * Minimum coverage is 0.1
-	 * Aspect ratio range is [0.75, 1.33]
-	 * Area range is [0.05, 1.0]
-	 * Max. attempts is 100
-	 */
-	int height = 0;
-	int width  = 0;
-	int top    = 0;
-	int left   = 0;
-	float ratio [2] = {0.75, 1.33};
-	float area  [2] = {0.05, 1.00};
-	crossbowImageSampleDistortedBoundingBox (
-		record->image, 
-		record->boxes, 
-		0.1, 
-		&ratio[0],
-		&area [0],
-		100, 
-		&height, &width, &top, &left);
-
-	/* Crop image */
-	crossbowImageCrop (record->image, height, width, top, left);
-
-	/* Flip image */
-	crossbowImageRandomFlipLeftRight (record->image);
-
-	/* Resize image */
-	crossbowImageResize (record->image, 224, 224);
-
-	/* Distort image colours */
-	crossbowImageMultiply (record->image, (1. / 255.));
-
-	crossbowImageRandomBrightness (record->image, (32. / 255.));
-	crossbowImageRandomContrast   (record->image, 0.5, 1.5);
-	/* Lower saturation is 0.5, upper saturation is 1.5, max. delta hue is (0.2 x pi) */
-	crossbowImageRandomHSVInYIQ   (record->image, 0.5, 1.5, 0.2 * 3.14);
-
-	/* Clip by value */
-	crossbowImageClipByValue (record->image, 0.0, 1.0);
+	
+	(void) record;
+	
+	return;
 }
 
 int main (int argc, char *argv[]) {
@@ -114,7 +47,7 @@ int main (int argc, char *argv[]) {
 	char *subset = "train";
 	int files = 1;
     int workers = 1;
-    int batchsize = 32;
+    int b = 32;
 	for (i = 1; i < argc;) {
 		if ((j = i + 1) == argc) {
 			fprintf(stderr, "usage: %s\n", USAGE);
@@ -137,7 +70,7 @@ int main (int argc, char *argv[]) {
 			workers = atoi(argv[j]);
 		} else
 		if (strcmp(argv[i], "-b") == 0) {
-			batchsize = atoi(argv[j]);
+			b = atoi(argv[j]);
 		} else
 		if (strcmp(argv[i], "-v") == 0) {
 			verbose = (unsigned) atoi(argv[j]);
@@ -147,8 +80,13 @@ int main (int argc, char *argv[]) {
 		i = j + 1;
 	}
 	
+	(void) verbose;
+	
 	/* Initialise memory manager */
 	crossbowMemoryManagerInit ();
+	
+	/* Initialise random number generator */
+	crossbowYarngInit (123456789);
 	
 	crossbowRecordReaderP reader = crossbowRecordReaderCreate (workers);
 	
@@ -169,7 +107,7 @@ int main (int argc, char *argv[]) {
     /* Create temporary buffer to hold batch of images. Every decoded 
      * image is (3 x 224 x 224) x sizeof(float) or 602,112 bytes long.
      */
-    int buffersize = batchsize * 602112;
+    int buffersize = b * 602112;
     void *buffer = (void *) crossbowMalloc (buffersize);
 	
     crossbowTimerP timer = crossbowTimerCreate ();
@@ -177,11 +115,11 @@ int main (int argc, char *argv[]) {
 	int count = 0;
     /* Process 100 batches */
     while (count < 100) {
-        crossbowRecordReaderRead (reader, batchsize, 602112, buffer, buffersize);
+        crossbowRecordReaderRead (reader, (strcmp (subset, "train") == 0) ? 1 : 0, b, 602112, buffer, buffersize);
 		count ++;
 	}
     tstamp_t dt = crossbowTimerElapsedTime (timer);
-    printf("%d batches (or %d images) processed\n", count, count * batchsize);
+    printf("%d batches (or %d images) processed\n", count, count * b);
     printf("%llu usecs\n", dt);
     crossbowTimerFree (timer);
 	crossbowRecordReaderFree (reader);
@@ -190,3 +128,4 @@ int main (int argc, char *argv[]) {
 	printf("Bye.\n");
 	return 0;
 }
+
