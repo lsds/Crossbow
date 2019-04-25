@@ -57,6 +57,11 @@ static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
 	if (verbose > 0)
 		printf("Checksum of cropped image is %.4f\n", crossbowImageChecksum (record->image));
 	
+	/* Rescale from [0, 255] to [0, 2] */
+	crossbowImageMultiply(record->image, 1. / 127.5);
+	/* Rescale to [-1, 1] */
+	crossbowImageSubtract(record->image, 1.);
+	
 	return;
 }
 
@@ -110,6 +115,11 @@ static void preprocessTrainingRecord (crossbowRecordP record, int verbose) {
 	/* Resize image to shape (224, 224) with the bilinear method (don't align corners) */
 	dbg("Crop image to (224 x 224)\n");
 	crossbowImageResize (record->image, 224, 224);
+	
+	/* Rescale from [0, 255] to [0, 2] */
+	crossbowImageMultiply(record->image, 1. / 127.5);
+	/* Rescale to [-1, 1] */
+	crossbowImageSubtract(record->image, 1.);
 }
 
 /*
