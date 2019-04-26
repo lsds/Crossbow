@@ -1,13 +1,13 @@
 # Makefile for Crossbow C/C++ library
-# Customised for platypus2 running Linux on Tue  9 Apr 16:57:23 UTC 2019
+# Customised for crossbow running Linux on Fri Apr 26 11:31:04 UTC 2019
 #
 OS = Linux
 CUDA_PATH := /usr/local/cuda
-JAVA_PATH := /usr/lib/jvm/java-1.8.0-openjdk-amd64
+JAVA_PATH := /usr/lib/jvm/java-8-openjdk-amd64
 BLAS_PATH := /opt/OpenBLAS
 NCCL_PATH := 
-JPEG_PATH := /home/akolious/libjpeg-turbo
-CBOW_PATH := /home/akolious/crossbow
+JPEG_PATH := /home/alex/libjpeg-turbo
+CBOW_PATH := /home/alex/crossbow
 
 CLASS_PATH := ../target/classes
 vpath %.class $(CLASS_PATH)
@@ -150,7 +150,7 @@ libCPU.so: CPU.o
 	$(NV) $(LFL) -shared -o libCPU.so CPU.o $(LIBS)
 	
 libGPU.so: GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o $(OBJS) $(KNLS)
-	$(NV) $(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o $(OBJS) $(KNLS) $(LIBS)
+	$(NV) $(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/random.o random/generator.o $(OBJS) $(KNLS) $(LIBS)
 	
 libBLAS.so: BLAS.o $(OBJS) $(KNLS)
 	$(NV) $(LFL) -shared -o libBLAS.so BLAS.o $(OBJS) $(KNLS) $(LIBS)
@@ -520,9 +520,9 @@ kernels/sleep.o: kernels/sleep.cu kernels/sleep.h
 # === [End of kernel compilation] ===
 	
 test: image/testrecordreader.c image/testbatchreader.c testrecorddataset.c
-	$(NV) $(INCLUDES) $(LFL) image/testrecordreader.c -o image/testrecordreader -L$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords $(LIBS)
-	$(NV) $(INCLUDES) $(LFL) image/testbatchreader.c  -o image/testbatchreader  -L$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords $(LIBS)
-	$(NV) $(INCLUDES) $(LFL) testrecorddataset.c  -o testrecorddataset  -L$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords $(LIBS)
+	$(NV) $(INCLUDES) $(LFL) image/testrecordreader.c -o image/testrecordreader -L$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords -lm $(LIBS)
+	$(NV) $(INCLUDES) $(LFL) image/testbatchreader.c  -o image/testbatchreader  -L$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords -lm $(LIBS)
+	$(NV) $(INCLUDES) $(LFL) testrecorddataset.c  -o testrecorddataset  -L$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords -lm $(LIBS)
 	
 clean:
 	rm -f *.o *.so

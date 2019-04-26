@@ -137,7 +137,7 @@ static void *handle (void *args) {
     /* Pin thread to a particular core based on worker id */
 
     cpu_set_t set;
-    int core = 2 + task->id;
+    int core = 18 + task->id;
     CPU_ZERO (&set);
     CPU_SET  (core, &set);
     sched_setaffinity (0, sizeof(set), &set);
@@ -155,9 +155,9 @@ static void *handle (void *args) {
 		bytes += record->length;
         /* Pre-process record */
 		if (task->training) {
-        	preprocessTrainingRecord (record, 0);
+			preprocessTrainingRecord (record, 0);
 		} else {
-         	preprocessTestRecord (record, 0);
+			preprocessTestRecord (record, 0);
 		}
         /* Copy decoded (augmented) image to buffer */
         crossbowImageCopy (record->image, task->buffer[0], task->offset[0], 0); /* Ignore limit */
@@ -167,7 +167,7 @@ static void *handle (void *args) {
         /* Free record */
         crossbowRecordFree (record);
     }
-    info("Decoder processed %d bytes\n", bytes);
+    dbg("Decoder processed %d bytes\n", bytes);
     return args;
 }
 
