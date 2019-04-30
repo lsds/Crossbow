@@ -1979,7 +1979,14 @@ void crossbowExecutionContextScheduleNext (
 			NULL,   labelsStartP,   labelsEndP, argv[1]);
 
 	if ((examplesStartP == 0) && (labelsStartP == 0)) {
-
+		/* 
+		 * N tasks has been scheduled, and the next N tasks 
+		 * are about to be scheduled. Wait until the images
+		 * and labels have been decoded.
+		 *
+		 * However, what if the swap succeeds but one of the 
+		 * previous N tasks is still being scheduled?
+		 */
 		crossbowRecordDatasetSwap (ctx->dataset[phase]);
 	}
 
