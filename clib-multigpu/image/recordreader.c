@@ -167,7 +167,7 @@ static void *handle (void *args) {
         /* Free record */
         crossbowRecordFree (record);
     }
-    info("Decoder processed %d bytes\n", bytes);
+    dbg("Decoder processed %d bytes\n", bytes);
     return args;
 }
 
@@ -437,8 +437,8 @@ void crossbowRecordReaderReadProperly (crossbowRecordReaderP p,
 
     int partition;
 
-    crossbowRecordFileP file;
-    int position;
+    crossbowRecordFileP file = NULL;
+    int position = 0;
 	
     crossbowArrayListP list;
     crossbowRecordReaderTaskP task;
@@ -526,7 +526,7 @@ void crossbowRecordReaderReadProperly (crossbowRecordReaderP p,
 
 	tstamp_t dt = crossbowTimerElapsedTime (timer);
 	double throughput = (((double) count) * 1000000.0) / ((double) dt);
-	info("%6d images processed in %7llu usecs: %7.1f images/sec\n", count, dt, throughput);
+	info("%6d images processed in %7llu usecs: %7.1f images/sec (current file is %s)\n", count, dt, throughput, ((! file) ? "None" : file->filename));
 	crossbowTimerFree (timer);
 
 	return;
