@@ -78,6 +78,8 @@
 
 #include "cudnn/cudnnbatchnormparams.h"
 
+#include "image/yarng.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -107,6 +109,7 @@ static inline int __convert_sm_to_cores (int major, int minor) {
 		{ 0x60,  64}, // Pascal  Generation (SM 6.0) GP100 class
 		{ 0x61, 128}, // Pascal  Generation (SM 6.1) GP10x class
 		{ 0x62, 128}, // Pascal  Generation (SM 6.2) GP10x class
+		{ 0x70,  64}, // Volta   Generation (SM 7.0) GV100 class
 		{   -1,  -1}  // Exit
 	};
 
@@ -3909,6 +3912,11 @@ int crossbowExecutionContextDelModel (crossbowExecutionContextP ctx) {
 void crossbowExecutionContextRecordDatasetInit (crossbowExecutionContextP ctx, int phase, int workers, int *capacity, int NB, int b, int *padding) {
 	invalidConditionException ((! ctx->dataset[phase]));
 	ctx->dataset[phase] = crossbowRecordDatasetCreate (workers, capacity, NB, b, padding, phase);
+	/* 
+	 * Let's initialise the random number generator here, 
+	 * although it will be called twice.
+	 */
+	crossbowYarngInit (123456789);
 	return;
 }
 

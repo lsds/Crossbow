@@ -71,8 +71,7 @@ crossbowDirExists ${datadir}
 layers=50
 dataset="imagenet"
 
-numgpus=1
-devices="0"
+numgpus=8
 
 momentum="0.9"
 learningrate="0.1"
@@ -84,14 +83,15 @@ decay="0.0001"
 
 batchsize=16
 
-epochs=30
+epochs=90
 
-# updatemodel="WORKER"
-updatemodel="SYNCHRONOUSEAMSGD"
+# updatemodel="DEFAULT"
+updatemodel="WORKER"
+# updatemodel="SYNCHRONOUSEAMSGD"
 alpha="0.1"
 
-numreplicas=1
-wpcscale=1
+numreplicas=2
+wpcscale=1000000
 
 devices=`crossbowCreateDeviceList ${numgpus}`
     
@@ -114,9 +114,9 @@ NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --display-interval 1000 \
     --cpu false \
     --gpu true \
-    --number-of-task-handlers 6 \
-    --number-of-file-handlers 2 \
-    --number-of-callback-handlers 6 \
+    --number-of-task-handlers 8 \
+    --number-of-file-handlers 8 \
+    --number-of-callback-handlers 8 \
     --gpu-devices ${devices} \
     --wpc ${wpc} \
     --number-of-gpu-models ${numreplicas} \
@@ -139,7 +139,8 @@ NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --alpha ${alpha} \
     --dataset-name ${dataset} \
     --layers ${layers} \
-    --data-directory ${datadir} \
+    --reuse-memory true \
+    # --data-directory ${datadir} \
     # Do not redirect output for a file by default
     # &> ${resultdir}/${resultfile}
 
