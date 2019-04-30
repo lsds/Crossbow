@@ -5,6 +5,8 @@
 #include "debug.h"
 #include "utils.h"
 
+#include "recorddataset.h"
+
 #include <pthread.h>
 
 #include <cuda.h>
@@ -88,6 +90,13 @@ static void *handle (void *args) {
 		 *
 		 * while (cudaEventQuery(s->event) != cudaSuccess);
 		 */
+		
+		/* 
+		 * Notify record dataset that a task completed 
+		 * (and therefore its data can be overwritten)
+		 */
+		if (s->dataset)
+			crossbowRecordDatasetNotify (s->dataset);
 
 #ifdef INTRA_TASK_MEASUREMENTS
 		checkCudaErrors(cudaEventElapsedTime (&dt, s->start, s->event));

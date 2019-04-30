@@ -21,6 +21,8 @@ typedef struct crossbow_record_dataset {
 
 	crossbowRecordReaderP reader;
 	crossbowDoubleBufferP buffer;
+	
+	volatile unsigned int latch;
 
 	/* Create worker thread */
 	volatile int exit;
@@ -47,6 +49,8 @@ void crossbowRecordDatasetInit (crossbowRecordDatasetP);
 void crossbowRecordDatasetInitSafely (crossbowRecordDatasetP);
 
 void crossbowRecordDatasetSwap (crossbowRecordDatasetP);
+
+void crossbowRecordDatasetNotify (crossbowRecordDatasetP);
 
 void crossbowRecordDatasetFree (crossbowRecordDatasetP);
 

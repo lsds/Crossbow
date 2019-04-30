@@ -1992,7 +1992,7 @@ void crossbowExecutionContextScheduleNext (
 		 */
 		crossbowRecordDatasetSwap (ctx->dataset[phase]);
 	}
-
+	
 	void *examplesP = ctx->dataset[phase]->images;
 	void   *labelsP = ctx->dataset[phase]->labels;
 
@@ -2030,6 +2030,9 @@ void crossbowExecutionContextScheduleNext (
 
 	if (stream->modelSynchronisationStream == NULL)
 		stream->modelSynchronisationStream = dev->modelSynchronisationStream;
+	
+	/* Assign dataset to stream */
+	stream->dataset = ctx->dataset[phase];
 
 	checkCudaErrors (cudaSetDevice(dev->id));
 
@@ -2216,6 +2219,7 @@ static void crossbowExecutionContextSynchroniseModelAcrossDevices (crossbowExecu
 #else
 
 	(void) defaultModel;
+	(void) shareMomentum;
 
 	checkNcclErrors(ncclGroupStart());
 	for (ndx = 0; ndx < crossbowArrayListSize (ctx->devices); ++ndx) {

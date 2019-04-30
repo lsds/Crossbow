@@ -80,7 +80,9 @@ crossbowRecordDatasetP crossbowRecordDatasetCreate (int workers, int *capacity, 
 	
 	/* Number of images and labels to decode/read per read call */
 	p->count = (NB * b);
-
+	
+	p->latch = 0;
+	
 	/* Set-up worker thread */
 	p->exit = 0;
 	p->exited = 0;
@@ -89,6 +91,7 @@ crossbowRecordDatasetP crossbowRecordDatasetCreate (int workers, int *capacity, 
 	pthread_cond_init  (&(p->cond), NULL);
 
 	p->events = crossbowListCreate ();
+	
 
 	/* Launch thread */
 	pthread_create (&(p->thread), NULL, handle, (void *) p);
@@ -129,6 +132,9 @@ void crossbowRecordDatasetInitSafely (crossbowRecordDatasetP p) {
 	/* Ensure that first call to `swap` will use the above buffer */
 	p->buffer->idx = 1;
 	crossbowDoubleBufferLock (p->buffer, 1);
+	
+	/* Set count-down latch */
+	p->latch = p->buffer->NB;
 
 	return;
 }
@@ -156,6 +162,12 @@ void crossbowRecordDatasetSwap (crossbowRecordDatasetP p) {
 
 	/* Create a new task to fill previous buffer (but lock it first) */
 	crossbowDoubleBufferLock (p->buffer, prev);
+	
+	/* Make sure that all tasks using previous buffer have completed */
+	while (p->latch != 0);
+	/* Reset count-down latch for the current buffer.
+	 * This should be a thread-safe operation. */
+	p->latch = p->buffer->NB;
 
 	crossbowRecordDatasetEventP event = crossbowMalloc (sizeof(crossbow_record_dataset_event_t));
 	event->idx = prev;
@@ -167,6 +179,12 @@ void crossbowRecordDatasetSwap (crossbowRecordDatasetP p) {
 	}
 	pthread_mutex_unlock(&(p->lock));
 
+	return;
+}
+
+void crossbowRecordDatasetNotify (crossbowRecordDatasetP p) {
+	nullPointerException(p);
+	__sync_sub_and_fetch (&(p->latch), 1);
 	return;
 }
 

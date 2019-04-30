@@ -15,6 +15,7 @@
 #include "dataflow.h"
 #include "operator.h"
 #include "model.h"
+#include "recorddataset.h"
 
 #include "utils.h"
 
@@ -50,6 +51,8 @@ typedef struct crossbow_stream {
 
 	crossbowVariableP examples;
 	crossbowVariableP labels;
+	
+	crossbowRecordDatasetP dataset;
 
 	int ops;
 	/*
