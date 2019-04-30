@@ -1,10 +1,10 @@
 # Makefile for Crossbow C/C++ library
-# Customised for platypus2 running Linux on Tue 30 Apr 09:32:41 UTC 2019
+# Customised for platypus2 running Linux on Tue 30 Apr 09:28:50 UTC 2019
 #
 OS = Linux
 CUDA_PATH := /usr/local/cuda
 JAVA_PATH := /usr/lib/jvm/java-8-openjdk-amd64
-BLAS_PATH := /opt/OpenBLAS
+BLAS_PATH := /usr/local/cuda
 NCCL_PATH := 
 JPEG_PATH := /home/akolious/libjpeg-turbo
 CBOW_PATH := /home/akolious/crossbow
@@ -128,7 +128,7 @@ ifneq ($(SMMAX),)
 endif
 endif
 
-OBJS := executioncontext.o timer.o threadsafequeue.o waitfreequeue.o thetaqueue.o memorymanager.o list.o bytebuffer.o bufferpool.o arraylist.o stream.o kernel.o operator.o operatordependency.o dataflow.o variableschema.o variable.o localvariable.o kernelconfigurationparameter.o kernelscalar.o model.o modelmanager.o resulthandler.o databuffer.o kernelmap.o batch.o callbackhandler.o taskhandler.o solverconfiguration.o measurementlist.o device.o lightweightdatasethandler.o recorddataset.o doublebuffer.o synch/common.o synch/default.o synch/downpour.o synch/easgd.o synch/hogwild.o synch/polyakruppert.o synch/sma.o synch/synchronouseasgd.o synch/synchronoussgd.o cudnn/cudnntensor.o cudnn/cudnnconvparams.o cudnn/cudnnpoolparams.o cudnn/cudnnreluparams.o cudnn/cudnnsoftmaxparams.o cudnn/cudnnbatchnormparams.o cudnn/cudnndropoutparams.o cudnn/cudnnhelper.o
+OBJS := executioncontext.o timer.o threadsafequeue.o waitfreequeue.o thetaqueue.o memorymanager.o list.o bytebuffer.o bufferpool.o arraylist.o stream.o kernel.o operator.o operatordependency.o dataflow.o variableschema.o variable.o localvariable.o kernelconfigurationparameter.o kernelscalar.o model.o modelmanager.o resulthandler.o databuffer.o kernelmap.o batch.o callbackhandler.o taskhandler.o solverconfiguration.o measurementlist.o device.o lightweightdatasethandler.o recorddataset.o doublebuffer.o cudnn/cudnntensor.o cudnn/cudnnconvparams.o cudnn/cudnnpoolparams.o cudnn/cudnnreluparams.o cudnn/cudnnsoftmaxparams.o cudnn/cudnnbatchnormparams.o cudnn/cudnndropoutparams.o cudnn/cudnnhelper.o
 KNLS := kernels/classify.o kernels/accuracy.o kernels/gradientdescentoptimiser.o kernels/innerproduct.o kernels/innerproductgradient.o kernels/matmul.o kernels/noop.o kernels/noopstateless.o kernels/softmax.o kernels/softmaxgradient.o kernels/softmaxloss.o kernels/softmaxlossgradient.o kernels/pool.o kernels/poolgradient.o kernels/relu.o kernels/relugradient.o kernels/conv.o kernels/convgradient.o kernels/dropout.o kernels/dropoutgradient.o kernels/lrn.o kernels/lrngradient.o kernels/matfact.o kernels/cudnnconv.o kernels/cudnnconvgradient.o kernels/cudnnpool.o kernels/cudnnpoolgradient.o kernels/cudnnrelu.o kernels/cudnnrelugradient.o kernels/cudnnsoftmax.o kernels/cudnnsoftmaxgradient.o kernels/datatransform.o kernels/batchnorm.o kernels/batchnormgradient.o kernels/cudnnbatchnorm.o kernels/cudnnbatchnormgradient.o kernels/cudnndropout.o kernels/cudnndropoutgradient.o kernels/elementwiseop.o kernels/elementwiseopgradient.o kernels/concat.o kernels/concatgradient.o kernels/sleep.o
 
 CROSSBOWBASEINCLUDES := memorymanager.h debug.h utils.h
@@ -149,8 +149,8 @@ uk_ac_imperial_lsds_crossbow_device_ObjectRef.h:
 libCPU.so: CPU.o
 	$(NV) $(LFL) -shared -o libCPU.so CPU.o $(LIBS)
 	
-libGPU.so: GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/random.o random/generator.o $(OBJS) $(KNLS)
-	$(NV) $(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/random.o random/generator.o $(OBJS) $(KNLS) $(LIBS)
+libGPU.so: GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o $(OBJS) $(KNLS)
+	$(NV) $(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o $(OBJS) $(KNLS) $(LIBS)
 	
 libBLAS.so: BLAS.o $(OBJS) $(KNLS)
 	$(NV) $(LFL) -shared -o libBLAS.so BLAS.o $(OBJS) $(KNLS) $(LIBS)
@@ -224,33 +224,7 @@ recorddataset.o: recorddataset.c recorddataset.h $(CROSSBOWBASEINCLUDES)
 doublebuffer.o: doublebuffer.c doublebuffer.h $(CROSSBOWBASEINCLUDES)
 	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
 
-synch/common.o: synch/common.c synch/common.h executioncontext.h $(CROSSBOWBASEINCLUDES)
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
 
-synch/default.o: synch/default.c synch/default.h synch/common.h executioncontext.h $(CROSSBOWBASEINCLUDES)
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
-	
-synch/downpour.o: synch/downpour.c synch/downpour.h synch/common.h executioncontext.h $(CROSSBOWBASEINCLUDES)
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
-	
-synch/easgd.o: synch/easgd.c synch/easgd.h synch/common.h executioncontext.h $(CROSSBOWBASEINCLUDES)
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
-	
-synch/hogwild.o: synch/hogwild.c synch/hogwild.h synch/common.h executioncontext.h $(CROSSBOWBASEINCLUDES)
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
-	
-synch/polyakruppert.o: synch/polyakruppert.c synch/polyakruppert.h synch/common.h executioncontext.h $(CROSSBOWBASEINCLUDES)
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
-	
-synch/sma.o: synch/sma.c synch/sma.h synch/common.h executioncontext.h $(CROSSBOWBASEINCLUDES)
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
-	
-synch/synchronouseasgd.o: synch/synchronouseasgd.c synch/synchronouseasgd.h synch/common.h executioncontext.h $(CROSSBOWBASEINCLUDES)
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
-	
-synch/synchronoussgd.o: synch/synchronoussgd.c synch/synchronoussgd.h synch/common.h executioncontext.h $(CROSSBOWBASEINCLUDES)
-	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
-	
 image/recordreader.o: image/recordreader.c image/recordreader.h $(CROSSBOWBASEINCLUDES)
 	$(NV) $(INCLUDES) $(LFL) $(GENCODE) -c $< -o $@
 

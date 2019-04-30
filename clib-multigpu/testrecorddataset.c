@@ -101,7 +101,7 @@ int main (int argc, char *argv[]) {
 	/* Register dataset files with the record reader */
 	int idx;
 	char filename[1024];
-	for (idx = 0; idx < files; ++idx) {
+	for (idx = 5; idx < files; ++idx) {
 		if (sprintf(filename, "%s/crossbow-%s.records.%d", directory, subset, (idx + 1)) < 0) {
 			fprintf(stderr, "error: failed to generate filename\n");
 			exit(1);
@@ -117,6 +117,11 @@ int main (int argc, char *argv[]) {
     int count = 0;
     while (count < iterations) {
         /* Swap buffers (assuming instant processing) */
+		if (count > 0) {
+			for (i = 0; i < NB; ++i) {
+				crossbowRecordDatasetNotify (dataset);
+			}
+		}
         crossbowRecordDatasetSwap (dataset);
         count ++;
     }

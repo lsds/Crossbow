@@ -137,7 +137,7 @@ static void *handle (void *args) {
     /* Pin thread to a particular core based on worker id */
 
     cpu_set_t set;
-    int core = 18 + task->id;
+    int core = 16 + task->id;
     CPU_ZERO (&set);
     CPU_SET  (core, &set);
     sched_setaffinity (0, sizeof(set), &set);

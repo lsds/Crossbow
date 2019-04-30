@@ -63,14 +63,25 @@ void crossbowImageStartDecoding (crossbowImageP p) {
 		err("Failed to read JPEG header\n");
 	/* Try integer fast... */
 	p->info->dct_method = JDCT_IFAST;
-	p->info->out_color_space = JCS_RGB;
-	jpeg_start_decompress(p->info);
-	/* dbg("JPEG image (%d x %d x %d)\n", p->info->output_height, p->info->output_width, p->info->output_components); */
-	/* JPEG images must have 3 channels */
-	if (p->info->output_components != 3) {
-		printf("Hm. Image has %d channels?\n", p->info->output_components);
+	/* p->info->out_color_space = JCS_RGB; */
+	if (p->info->jpeg_color_space == JCS_CMYK || p->info->jpeg_color_space == JCS_YCCK) {
+		/* Always use CMYK for output in a 4 channel JPEG. The library 
+		 * has a builtin decoder. We will later convert to RGB.
+		 */
+		info("Set colour space to CMYK\n");
+		p->info->out_color_space = JCS_CMYK;
+	} else {
+		p->info->out_color_space = JCS_RGB;
 	}
-	invalidConditionException (p->info->output_components == p->channels);
+	jpeg_start_decompress(p->info);
+	if (p->info->out_color_space == JCS_CMYK) {
+		info("JPEG image (%d x %d x %d)\n", 
+			p->info->output_height, p->info->output_width, p->info->output_components);
+	}
+	/* 
+	 * JPEG images must have 3 channels. But we need to account for CMYK images.
+	 * invalidConditionException (p->info->output_components == p->channels);
+	 */
 	p->started = 1;
 	return;
 }
@@ -79,11 +90,27 @@ void crossbowImageDecode (crossbowImageP p) {
 	nullPointerException(p);
 	/* Is `p->info` filled? */
 	invalidConditionException (p->started);
+	unsigned CMYK = (p->info->out_color_space == JCS_CMYK);
 	if (p->decoded)
 		return;
 	p->elements = crossbowImageInputHeight (p) * crossbowImageInputWidth (p) * crossbowImageChannels (p);
+	if (CMYK) {
+		info("Allocate an image buffer of size (%d x %d x %d)\n",
+			crossbowImageInputHeight (p),
+			crossbowImageInputWidth  (p),
+			crossbowImageChannels    (p)
+		);
+	}
 	p->img = (unsigned char *) crossbowMalloc (p->elements);
-
+	
+	unsigned char *temp[1];
+	temp[0] = NULL;
+	if (CMYK) {
+		/* Allocate temporal buffer */
+		info("Allocate a temporal buffer of (%d x %d)\n", p->info->output_width, p->info->output_components);
+		temp[0] = (unsigned char *) crossbowMalloc (p->info->output_width * p->info->output_components);
+	}
+	
 	/* Decompress */
 
 	/* Compute row stride */
@@ -91,12 +118,48 @@ void crossbowImageDecode (crossbowImageP p) {
 	unsigned char *buffer[1];
 
 	/* By default, scanlines will come out in RGBRGBRGB...  order */
+	int lines = 0;
 	while (p->info->output_scanline < (unsigned int) crossbowImageInputHeight (p)) {
-
+		/* Set pointer to image buffer */
 		buffer[0] = p->img + p->info->output_scanline * stride;
-
-		jpeg_read_scanlines(p->info, buffer, 1);
+		if (CMYK) {
+			/* Read into temporal buffer */
+			lines += jpeg_read_scanlines(p->info, temp, 1);
+			/* Convert CMYK to RGB */
+			for (int i = 0; i < crossbowImageInputWidth (p); ++i) {
+				int offset = 4 * i;
+				const int c = (int) temp[0][offset + 0];
+				const int m = (int) temp[0][offset + 1];
+				const int y = (int) temp[0][offset + 2];
+				const int k = (int) temp[0][offset + 3];
+				int r, g, b;
+				if (p->info->saw_Adobe_marker) {
+					r = (k * c) / 255;
+					g = (k * m) / 255;
+					b = (k * y) / 255;
+				} else {
+					r = (255 - k) * (255 - c) / 255;
+					g = (255 - k) * (255 - m) / 255;
+					b = (255 - k) * (255 - y) / 255;
+				}
+				buffer[0][3 * i + 0] = r;
+				buffer[0][3 * i + 1] = g;
+				buffer[0][3 * i + 2] = b;
+			}
+		} else {
+			/* Set pointer to image buffer */
+			buffer[0] = p->img + p->info->output_scanline * stride;
+			jpeg_read_scanlines(p->info, buffer, 1);
+		}
 	}
+	if (CMYK) {
+		info("%d lines read\n", lines);
+	}
+	
+	if (CMYK) {
+		crossbowFree (temp[0], p->info->output_width * p->info->output_components);
+	}
+	
 	jpeg_finish_decompress(p->info);
 
 	p->decoded = 1;

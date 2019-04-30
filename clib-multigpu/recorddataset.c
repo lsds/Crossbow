@@ -133,8 +133,8 @@ void crossbowRecordDatasetInitSafely (crossbowRecordDatasetP p) {
 	p->buffer->idx = 1;
 	crossbowDoubleBufferLock (p->buffer, 1);
 	
-	/* Set count-down latch */
-	p->latch = p->buffer->NB;
+	/* Set count-down latch to 0 (don't wait for any tasks) */
+	p->latch = 0;
 
 	return;
 }
@@ -184,7 +184,12 @@ void crossbowRecordDatasetSwap (crossbowRecordDatasetP p) {
 
 void crossbowRecordDatasetNotify (crossbowRecordDatasetP p) {
 	nullPointerException(p);
-	__sync_sub_and_fetch (&(p->latch), 1);
+	unsigned int value = __sync_sub_and_fetch (&(p->latch), 1);
+#ifdef GPU_VERBOSE	
+	info("Current latch value is %d\n", value);
+#else
+	(void) value;
+#endif
 	return;
 }
 
