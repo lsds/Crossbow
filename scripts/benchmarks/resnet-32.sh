@@ -68,7 +68,7 @@ crossbowDirExists ${resultdir}
 layers=32
 dataset="cifar-10"
 
-numgpus=1
+numgpus=2
 devices="0"
 
 momentum="0.9"
@@ -79,12 +79,21 @@ learningratestepunit="epochs"
 learningrategamma="0.1"
 decay="0.0001"
 
-batchsize=64
+batchsize=512
 
 epochs=140
 
+# Choose a synchronisation strategy
+#
+# updatemodel="DEFAULT"
 # updatemodel="WORKER"
-updatemodel="SYNCHRONOUSEAMSGD"
+# updatemodel="EAMSGD"
+# updatemodel="SYNCHRONOUSEAMSGD"
+# updatemodel="DOWNPOUR"
+# updatemodel="HOGWILD"
+# updatemodel="POLYAK-RUPPERT"
+updatemodel="SMA"
+
 alpha="0.1"
 
 numreplicas=1
@@ -92,7 +101,7 @@ wpcscale=1
 
 # End of configuration
 
-datadirectory=`printf "/mnt/nfs/users/piwatcha/16-crossbow/data/cifar-10/pre-processed/b-%03d" $batchsize`
+datadirectory=`printf "$CROSSBOW_HOME/data/cifar-10/b-%03d" $batchsize`
     
 devices=`crossbowCreateDeviceList ${numgpus}`
     

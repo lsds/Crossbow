@@ -1,4 +1,4 @@
-#include "synchronouseasgd.h"
+#include "synchronouseamsgd.h"
 
 #include "common.h"
 

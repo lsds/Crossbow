@@ -23,53 +23,108 @@ void crossbowKernelOptimiserDefault (crossbowStreamP s) {
 
 	elements = s->model->elements;
 
-	/* Apply weight decay */
-	if (s->model->conf->weightDecay > 0)
-		checkCublasStatus(cublasSaxpy (s->cublasHandle[s->op->branch], elements, &(s->model->conf->weightDecay), (float *) (model->dev), 1, (float *) (gradient->dev), 1));
-
+	/* Apply weight decay to the replica */
+	if (s->model->conf->weightDecay > 0) {
+		checkCublasStatus(cublasSaxpy (
+			s->cublasHandle[s->op->branch], 
+			elements, 
+			&(s->model->conf->weightDecay), 
+			(float *) (model->dev), 
+			1, 
+			(float *) (gradient->dev), 
+			1));
+	}
+	
+	/* Get current learning rate value */
 	rate = minusone * crossbowSolverConfGetLearningRate(s->model->conf, s->task);
-
+	
 	if (s->model->conf->momentum > 0) {
-
+		
+		/* Removed support for Nesterov momentum currently */
 		if (s->model->conf->momentumMethod == NESTEROV) {
 			err("Nesterov's momentum has been disabled\n");
 		}
-
+		
 		/* Scale gradient based on learning rate */
-		checkCublasStatus(cublasSscal(s->cublasHandle[s->op->branch], elements, &(rate), (float *) (gradient->dev), 1));
-
+		checkCublasStatus(cublasSscal(
+			s->cublasHandle[s->op->branch], 
+			elements, 
+			&(rate), 
+			(float *) (gradient->dev), 
+			1));
+		
 		/* Apply momentum to gradient */
-		checkCublasStatus(cublasSaxpy (s->cublasHandle[s->op->branch], elements, &(s->model->conf->momentum), (float *) (last->dev), 1, (float *) (gradient->dev), 1));
-
-		/* Record event that gradient is ready to be used by parameter server */
+		checkCublasStatus(cublasSaxpy (
+			s->cublasHandle[s->op->branch], 
+			elements, 
+			&(s->model->conf->momentum), 
+			(float *) (last->dev), 
+			1, 
+			(float *) (gradient->dev), 
+			1));
+		
+		/* Record event that gradient buffer is ready to be used */
 		checkCudaErrors(cudaEventRecord (s->model->client, s->stream[s->op->branch]));
-
+		
 		/* Copy current gradient into last */
-		checkCudaErrors(cudaMemcpyAsync(last->dev, gradient->dev, s->model->bytes, cudaMemcpyDeviceToDevice, s->stream[s->op->branch]));
-
+		checkCudaErrors(cudaMemcpyAsync(
+			last->dev, 
+			gradient->dev, 
+			s->model->bytes, 
+			cudaMemcpyDeviceToDevice, 
+			s->stream[s->op->branch]));
+		
 		/* Apply gradient to local model */
-		checkCublasStatus(cublasSaxpy (s->cublasHandle[s->op->branch], elements, &(one), (float *) (gradient->dev), 1, (float *) (model->dev), 1));
-
-		/* Apply gradient to parameter server model (base model) */
+		checkCublasStatus(cublasSaxpy (
+			s->cublasHandle[s->op->branch], 
+			elements, 
+			&(one), 
+			(float *) (gradient->dev), 
+			1, 
+			(float *) (model->dev), 
+			1));
+		
+		/* Apply gradient to base model (wait for gradient to be ready) */
 		checkCudaErrors(cudaStreamWaitEvent(s->modelSynchronisationStream, s->model->client, 0));
-
-		checkCublasStatus(cublasSaxpy (s->modelSynchronisationHandle, elements, &(one), (float *) (gradient->dev), 1, (float *) (theModel->dev), 1));
-
+		
+		checkCublasStatus(cublasSaxpy (
+			s->modelSynchronisationHandle, 
+			elements, 
+			&(one), 
+			(float *) (gradient->dev), 
+			1, 
+			(float *) (theModel->dev), 
+			1));
+		
 		/* Record event that gradient has been applied to base model */
 		checkCudaErrors(cudaEventRecord(s->model->server, s->modelSynchronisationStream));
 	}
 	else {
-		/* Record event that gradient is ready to be used by parameter server */
+		/* Record event that gradient is ready to be used */
 		checkCudaErrors(cudaEventRecord (s->model->client, s->stream[s->op->branch]));
-
+		
 		/* Apply gradient to local model */
-		checkCublasStatus(cublasSaxpy (s->cublasHandle[s->op->branch], elements, &(rate), (float *) (gradient->dev), 1, (float *) (model->dev), 1));
-
-		/* Apply gradient to parameter server model (base model) */
+		checkCublasStatus(cublasSaxpy (
+			s->cublasHandle[s->op->branch], 
+			elements, 
+			&(rate), 
+			(float *) (gradient->dev), 
+			1, 
+			(float *) (model->dev), 
+			1));
+		
+		/* Apply gradient to base model (wait for gradient to be ready) */
 		checkCudaErrors(cudaStreamWaitEvent(s->modelSynchronisationStream, s->model->client, 0));
-
-		checkCublasStatus(cublasSaxpy (s->modelSynchronisationHandle, elements, &(rate), (float *) (gradient->dev), 1, (float *) (theModel->dev), 1));
-
+		
+		checkCublasStatus(cublasSaxpy (
+			s->modelSynchronisationHandle, 
+			elements, 
+			&(rate), 
+			(float *) (gradient->dev), 
+			1, 
+			(float *) (theModel->dev), 
+			1));
+		
 		checkCudaErrors(cudaEventRecord(s->model->server, s->modelSynchronisationStream));
 	}
 

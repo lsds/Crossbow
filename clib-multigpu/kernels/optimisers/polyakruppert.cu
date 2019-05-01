@@ -2,6 +2,6 @@
 
 void crossbowKernelOptimiserPolyakRuppert (crossbowStreamP s) {
 	(void) s;
-	err ("Polyak-Ruppert SGD is not supported yet");
+	err ("Polyak-Ruppert SGD is not supported yet\n");
 	return;
 }

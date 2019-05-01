@@ -6,7 +6,7 @@ static void crossbowSynchronisationSingleGPUDownpour (crossbowExecutionContextP 
 	(void)   ctx;
 	(void) first;
 	(void) clock;
-	err ("Single-GPU DOWNPOUR SGD model synchronisation is not supported yet");
+	err ("Single-GPU DOWNPOUR SGD model synchronisation is not supported yet\n");
 	return;
 }
 
@@ -14,7 +14,7 @@ static void crossbowSynchronisationMultiGPUDownpour (crossbowExecutionContextP c
 	(void)   ctx;
 	(void) first;
 	(void) clock;
-	err ("Multi-GPU DOWNPOUR SGD model synchronisation is not supported yet");
+	err ("Multi-GPU DOWNPOUR SGD model synchronisation is not supported yet\n");
 	return;
 }
 

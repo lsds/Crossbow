@@ -1,12 +1,17 @@
 #include "gradientdescentoptimiser.h"
 
 #include "optimisers/default.h"
+
 #include "optimisers/downpour.h"
-#include "optimisers/easgd.h"
 #include "optimisers/hogwild.h"
+
 #include "optimisers/polyakruppert.h"
+
 #include "optimisers/sma.h"
-#include "optimisers/synchronouseasgd.h"
+
+#include "optimisers/eamsgd.h"
+#include "optimisers/synchronouseamsgd.h"
+
 #include "optimisers/synchronoussgd.h"
 
 void crossbowKernelGradientDescentOptimiser (void *args) {

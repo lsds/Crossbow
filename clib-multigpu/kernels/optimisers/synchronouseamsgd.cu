@@ -1,4 +1,4 @@
-#include "synchronouseasgd.h"
+#include "synchronouseamsgd.h"
 
 void crossbowKernelOptimiserSynchronousElasticAveragingSGD (crossbowStreamP s) {
 

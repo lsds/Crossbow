@@ -1,4 +1,4 @@
-#include "easgd.h"
+#include "eamsgd.h"
 
 #include "common.h"
 
@@ -6,7 +6,7 @@ static void crossbowSynchronisationSingleGPUElasticAveragingSGD (crossbowExecuti
 	(void)   ctx;
 	(void) first;
 	(void) clock;
-	err ("Single-GPU asynchronous Elastic Averaging SGD model synchronisation is not supported yet");
+	err ("Single-GPU asynchronous Elastic Averaging SGD model synchronisation is not supported yet\n");
 	return;
 }
 
@@ -14,7 +14,7 @@ static void crossbowSynchronisationMultiGPUElasticAveragingSGD (crossbowExecutio
 	(void)   ctx;
 	(void) first;
 	(void) clock;
-	err ("Multi-GPU asynchronous Elastic Averaging SGD model synchronisation is not supported yet");
+	err ("Multi-GPU asynchronous Elastic Averaging SGD model synchronisation is not supported yet\n");
 	return;
 }
 

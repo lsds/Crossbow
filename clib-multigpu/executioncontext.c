@@ -81,13 +81,13 @@
 #include "image/yarng.h"
 
 #include "synch/sma.h"
-#include "synch/easgd.h"
+#include "synch/eamsgd.h"
 #include "synch/default.h"
 #include "synch/hogwild.h"
 #include "synch/downpour.h"
 #include "synch/polyakruppert.h"
 #include "synch/synchronoussgd.h"
-#include "synch/synchronouseasgd.h"
+#include "synch/synchronouseamsgd.h"
 
 #include <sys/stat.h>
 #include <sys/types.h>

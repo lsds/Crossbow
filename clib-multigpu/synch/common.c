@@ -105,28 +105,34 @@ void crossbowSynchronisationSynchroniseModelAcrossDevices (crossbowExecutionCont
 
 	checkNcclErrors(ncclGroupStart());
 	for (ndx = 0; ndx < crossbowArrayListSize (ctx->devices); ++ndx) {
-
-			/* Get current device */
-			dev = crossbowArrayListGet (ctx->devices, ndx);
-			if (! crossbowDeviceSelected(dev))
-				continue;
-
-			/* Get base model for current device */
-			model = crossbowArrayListGet (ctx->modelmanager->baseModels, dev->id);
-
-			checkNcclErrors(ncclBcast(model->data->dev, model->bytes, ncclChar, defaultDev->id, 
-                ctx->comms[dev->id], dev->modelSynchronisationStream));
-	}
-	checkNcclErrors(ncclGroupEnd());
-
-	/* Record multi-GPU synchronisation event */
-	for (ndx = 0; ndx < crossbowArrayListSize (ctx->devices); ++ndx) {
+	
 		/* Get current device */
 		dev = crossbowArrayListGet (ctx->devices, ndx);
 		if (! crossbowDeviceSelected(dev))
 			continue;
+
+		/* Get base model for current device */
+		model = crossbowArrayListGet (ctx->modelmanager->baseModels, dev->id);
+		
+		checkCudaErrors (cudaSetDevice(dev->id));
+
+		checkNcclErrors(ncclBcast(model->data->dev, model->bytes, ncclChar, defaultDev->id, 
+			ctx->comms[dev->id], dev->modelSynchronisationStream));
+	}
+	checkNcclErrors(ncclGroupEnd());
+	
+	checkCudaErrors (cudaSetDevice(defaultDev->id));
+	
+	/* Record multi-GPU synchronisation event */
+	for (ndx = 0; ndx < crossbowArrayListSize (ctx->devices); ++ndx) {
+		
+		/* Get current device */
+		dev = crossbowArrayListGet (ctx->devices, ndx);
+		if (! crossbowDeviceSelected(dev))
+			continue;
+		
 		checkCudaErrors(cudaEventRecord (ctx->modelmanager->synched [dev->id], 
-            dev->modelSynchronisationStream));
+			dev->modelSynchronisationStream));
 	}
 #endif
 	return;

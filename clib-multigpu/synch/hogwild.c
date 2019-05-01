@@ -6,7 +6,7 @@ static void crossbowSynchronisationSingleGPUHogwild (crossbowExecutionContextP c
 	(void)   ctx;
 	(void) first;
 	(void) clock;
-	err ("Single-GPU Hogwild! SGD model synchronisation is not supported yet");
+	err ("Single-GPU Hogwild! SGD model synchronisation is not supported yet\n");
 	return;
 }
 
@@ -14,7 +14,7 @@ static void crossbowSynchronisationMultiGPUHogwild (crossbowExecutionContextP ct
 	(void)   ctx;
 	(void) first;
 	(void) clock;
-	err ("Multi-GPU Hogwild! SGD model synchronisation is not supported yet");
+	err ("Multi-GPU Hogwild! SGD model synchronisation is not supported yet\n");
 	return;
 }
 

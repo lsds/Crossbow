@@ -2,6 +2,6 @@
 
 void crossbowKernelOptimiserHogwild (crossbowStreamP s) {
 	(void) s;
-	err ("Hogwild! SGD is not supported yet");
+	err ("Hogwild! SGD is not supported yet\n");
 	return;
 }

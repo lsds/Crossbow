@@ -2,6 +2,6 @@
 
 void crossbowKernelOptimiserDownpour (crossbowStreamP s) {
 	(void) s;
-	err ("Downpour SGD is not supported yet");
+	err ("Downpour SGD is not supported yet\n");
 	return;
 }

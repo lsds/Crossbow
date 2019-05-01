@@ -1,7 +1,7 @@
-#include "easgd.h"
+#include "eamsgd.h"
 
 void crossbowKernelOptimiserElasticAveragingSGD  (crossbowStreamP s) {
 	(void) s;
-	err ("Asynchronous elastic averaging SGD is not supported yet");
+	err ("Asynchronous Elastic Averaging SGD is not supported yet\n");
 	return;
 }
