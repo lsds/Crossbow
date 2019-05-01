@@ -1616,8 +1616,9 @@ void crossbowExecutionContextSetUpdateModelType (crossbowExecutionContextP ctx, 
 	else if (type == 2) ctx->theModel->type = EAMSGD;
 	else if (type == 3) ctx->theModel->type = SYNCHRONOUSEAMSGD;
 	else if (type == 4) ctx->theModel->type = DOWNPOUR;
-	// HERE: New types...
-	else if (type == 5) ctx->theModel->type = DOWNPOUR;
+	else if (type == 5) ctx->theModel->type = HOGWILD;
+	else if (type == 6) ctx->theModel->type = POLYAK_RUPPERT;
+	else if (type == 7) ctx->theModel->type = SMA;
 	else
 		err("Invalid update model type\n");
 
@@ -2172,6 +2173,7 @@ int crossbowExecutionContextSynchroniseModels (crossbowExecutionContextP ctx, in
 
 	case SYNCHRONOUSEAMSGD:
 		dbg("Synchronise replicas using synchronous EAMSGD model (%s-GPU mode)\n", (ctx->mode == SINGLE_GPU) ? "single" : "multi");
+		/* This ifdef should be removed */
 #ifdef ELASTIC_AVERAGE
 		crossbowSynchronisationSynchronousElasticAveragingSGD (ctx, first, clock);
 #else
@@ -2183,6 +2185,21 @@ int crossbowExecutionContextSynchroniseModels (crossbowExecutionContextP ctx, in
 		dbg("Synchronise replicas using DOWNPOUR model (%s-GPU mode)\n", (ctx->mode == SINGLE_GPU) ? "single" : "multi");
 		crossbowSynchronisationDownpour (ctx, first, clock);
 		break;
+		
+	case HOGWILD:
+		dbg("Synchronise replicas using Hogwild! model (%s-GPU mode)\n", (ctx->mode == SINGLE_GPU) ? "single" : "multi");
+		crossbowSynchronisationHogwild (ctx, first, clock);
+		break;
+	
+	case POLYAK_RUPPERT:
+		dbg("Synchronise replicas using Polyak-Ruppert model (%s-GPU mode)\n", (ctx->mode == SINGLE_GPU) ? "single" : "multi");
+		crossbowSynchronisationPolyakRuppert (ctx, first, clock);
+		break;
+		
+	case SMA:
+		dbg("Synchronise replicas using SMA model (%s-GPU mode)\n", (ctx->mode == SINGLE_GPU) ? "single" : "multi");
+		crossbowSynchronisationSMA (ctx, first, clock);
+		break;
 
 	default:
 		err("Invalid model update type\n");
@@ -2191,12 +2208,12 @@ int crossbowExecutionContextSynchroniseModels (crossbowExecutionContextP ctx, in
 	if (autotune < 0) {
 		crossbowModelManagerDelModel (ctx->modelmanager);
 	}
-
+	
 	if (autotune > 0) {
 		crossbowModelManagerAddModel (ctx->modelmanager);
 		crossbowExecutionContextAddStream (ctx);
 	}
-
+	
 	/* Increment the clock of all locked models */
 	crossbowModelManagerIncrementClock(ctx->modelmanager, clock);
 

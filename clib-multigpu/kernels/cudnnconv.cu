@@ -107,7 +107,7 @@ void crossbowCudnnKernelConv (void *args) {
 			params->output->descriptor,
 			output->dev
 			));
-
+	
 	if (hasBias) {
 
 		alpha = 1;
