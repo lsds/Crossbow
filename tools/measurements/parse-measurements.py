@@ -9,6 +9,8 @@ import argparse
 
 import numpy as np
 
+from datetime import datetime
+
 class GPU(object):
     
     def __init__(self):
@@ -31,7 +33,7 @@ class Measurement(object):
         self.memory = MemoryInfo()
 
 def print_stats(key, values):
-    print(key, \
+    print("%s %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f" % (key, \
           np.mean(values), \
           np.std(values), \
           min(values), \
@@ -40,18 +42,39 @@ def print_stats(key, values):
           np.percentile(values, 25), \
           np.percentile(values, 50), \
           np.percentile(values, 75), \
-          np.percentile(values, 99))
+          np.percentile(values, 99)))
 
-def process(filename):
+def process(filename, rfile):
+    # Check the result file to find the point where measurements become useful
+    start_task_time = 0
+    r = open(rfile, "r")
+    for line in r:
+        if "Start scheduling tasks at" in line:
+            values = line.split(" ")
+            time = values[0] + " " + values[1]
+            dt = datetime.strptime(time, "%Y-%m-%d %H:%M:%S").strftime('%s.%f')
+            time_ms = int(float(dt) * 1000)
+            start_task_time = time_ms
+            break
+    print("Start time is %d" % start_task_time)
+    
     f = open(filename, "r")
     lines = 0
     measurements = {}
+    skipped = 0
     for line in f:
         lines += 1
         # Skip header for now
         if line.startswith("timestamp") or line.startswith("#"):
             continue
         s = line.split(",")
+        time = s[0].strip()
+        dt = datetime.strptime(time, "%Y/%m/%d %H:%M:%S.%f").strftime('%s.%f')
+        time_ms = int(float(dt) * 1000)
+        
+        if time_ms < start_task_time:
+            skipped += 1
+            continue
         m = Measurement()
         # 
         # 0: timestamp          (date/time)
@@ -73,7 +96,7 @@ def process(filename):
         m.memory.free = float(s[6])
         # Append to dictionary
         measurements.setdefault(m.serial, []).append(m)
-    print("%d lines processed" % lines)
+    print("%d lines processed (%d skipped)" % (lines, skipped))
     keys = measurements.keys()
     # print(keys)
     print("%d GPU devices" % len(keys))
@@ -83,7 +106,7 @@ def process(filename):
         # print("%s: %d measurements" % (key, length))
         K.append(length)
     if len(set(K)) != 1:
-        print("error: different number of measurements per GPU", file=sys.stderr)
+        sys.stderr.write("error: different number of measurements per GPU")
         sys.exit(1)
     print("%d measurements per GPU" % K[0])
     
@@ -100,14 +123,15 @@ def process(filename):
             memutilvalues.append(m.memory.utilisation)
         if np.mean(gpuutilvalues) < 1:
             continue
-        else:
-            agggpuutil.extend(gpuutilvalues)
-            aggmemutil.extend(memutilvalues)
+        agggpuutil.extend(gpuutilvalues)
+        aggmemutil.extend(memutilvalues)
+        print("GPU utilization stats for GPU " + key)
         print_stats(key, gpuutilvalues)
+        print("Memory utilization stats for GPU " + key)
         print_stats(key, memutilvalues)
     print("Aggregated values")
-  
-    
+    print_stats("agg_gpu", agggpuutil)
+    print_stats("agg_mem", aggmemutil)
     
     return
 
@@ -121,12 +145,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Check if file exists
-    if not os.path.isfile(args.filename):
-        print("error: file '%s' not found" % filename, file=sys.stderr)
+    # Assume result file has the same name as measurements file
+    rfile = "./results/" + args.filename.split(".")[0] + ".out"
+    if not os.path.isfile(args.filename) or not os.path.isfile(rfile):
+        sys.stderr.write("error: file '%s' not found" % args.filename)
         sys.exit(1)
     
     # Process file
-    process(args.filename)
+    process(args.filename, rfile)
     
     print("Bye.")
     sys.exit(0)
