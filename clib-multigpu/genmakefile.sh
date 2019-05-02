@@ -231,7 +231,7 @@ libCPU.so: CPU.o
 	\$(NV) \$(LFL) -shared -o libCPU.so CPU.o \$(LIBS)
 	
 libGPU.so: GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/random.o random/generator.o \$(OBJS) \$(KNLS)
-	\$(NV) \$(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o \$(OBJS) \$(KNLS) \$(LIBS)
+	\$(NV) \$(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/random.o random/generator.o \$(OBJS) \$(KNLS) \$(LIBS)
 	
 libBLAS.so: BLAS.o \$(OBJS) \$(KNLS)
 	\$(NV) \$(LFL) -shared -o libBLAS.so BLAS.o \$(OBJS) \$(KNLS) \$(LIBS)
