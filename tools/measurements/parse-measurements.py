@@ -42,16 +42,17 @@ class Measurement(object):
         return False
 
 def printStats(key, values):
-    print("%s %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f" % (key, \
+    print("%s %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f" % (
+          key, \
+          np.min(values), \
           np.mean(values), \
-          np.std(values), \
-          min(values), \
-          max(values), \
+          np.max(values), \
           np.percentile(values,  5), \
           np.percentile(values, 25), \
           np.percentile(values, 50), \
           np.percentile(values, 75), \
-          np.percentile(values, 99)))
+          np.percentile(values, 99), \
+          np.std(values)))
 
 
 def crossbow(filename):
