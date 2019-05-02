@@ -7,6 +7,8 @@ import os.path
 
 import argparse
 
+import numpy as np
+
 class GPU(object):
     
     def __init__(self):
@@ -27,6 +29,18 @@ class Measurement(object):
         self.timestamp = None
         self.gpu = GPU()
         self.memory = MemoryInfo()
+
+def print_stats(key, values):
+    print(key, \
+          np.mean(values), \
+          np.std(values), \
+          min(values), \
+          max(values), \
+          np.percentile(values,  5), \
+          np.percentile(values, 25), \
+          np.percentile(values, 50), \
+          np.percentile(values, 75), \
+          np.percentile(values, 99))
 
 def process(filename):
     f = open(filename, "r")
@@ -74,6 +88,26 @@ def process(filename):
     print("%d measurements per GPU" % K[0])
     
     # Perform some statistics
+    agggpuutil = []
+    aggmemutil = []
+    for key in keys:
+        if len(measurements[key]) == 0:
+            continue
+        gpuutilvalues = []
+        memutilvalues = []
+        for m in measurements[key]:
+            gpuutilvalues.append(m.gpu.utilisation)
+            memutilvalues.append(m.memory.utilisation)
+        if np.mean(gpuutilvalues) < 1:
+            continue
+        else:
+            agggpuutil.extend(gpuutilvalues)
+            aggmemutil.extend(memutilvalues)
+        print_stats(key, gpuutilvalues)
+        print_stats(key, memutilvalues)
+    print("Aggregated values")
+  
+    
     
     return
 
