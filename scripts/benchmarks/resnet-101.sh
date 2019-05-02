@@ -43,6 +43,11 @@ if [ -z $CROSSBOW_HOME ]; then
     exit 1
 fi
 
+# Enable GPU utilisation measurements
+MEASUREMENTS=1
+MEASUREMENTSCRIPT="$CROSSBOW_HOME/tools/measurements/gpu-measurements.sh"
+MEASUREMENTSCRIPTPID=
+
 CROSSBOW="${CROSSBOW_HOME}/target/crossbow-0.0.1-SNAPSHOT.jar"
 TESTS="${CROSSBOW_HOME}/target/test-classes"
 
@@ -84,6 +89,11 @@ decay="0.0001"
 batchsize=16
 
 epochs=90
+if [ $MEASUREMENTS -gt 0 ]; then
+    # Train only for a single epoch. Processing should 
+    # sufficient time to gather utilisation metrics
+    epochs=1
+fi
 
 # updatemodel="DEFAULT"
 updatemodel="WORKER"
@@ -107,9 +117,28 @@ learningratesteps="30,60,80"
     
 # echo "[INFO] Train for $epochs epochs (schedule is $learningratesteps)"
 echo "[INFO] Train for $epochs epochs"
-	
-resultfile="resnet-100.out"
 
+# Give result file a meaningful name
+resultfile="resnet-101-b-${batchsize}-g-${numgpus}-m-${numreplicas}.out"
+
+if [ $MEASUREMENTS -gt 0 ]; then
+    if [ ! -x $MEASUREMENTSCRIPT ]; then
+        echo "error: invalid script: $MEASUREMENTSCRIPT"
+        exit 1
+    fi
+    # Let's generate an appropriate filename
+    # to store measurements
+    $MEASUREMENTSCRIPT "resnet-101-b-${batchsize}-g-${numgpus}-m-${numreplicas}.csv" &
+    # Get background process id
+    MEASUREMENTSCRIPTPID=$!
+fi
+
+# The data directory is hard-coded for now until the code supports
+# distinct directories for training and validation record dataset:
+#
+# --data-directory ${datadir}
+
+# Do not redirect output for a file by default
 NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --display-interval 1000 \
     --cpu false \
@@ -140,10 +169,17 @@ NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --dataset-name ${dataset} \
     --layers ${layers} \
     --reuse-memory true \
-    # --data-directory ${datadir} \
-    # Do not redirect output for a file by default
-    # &> ${resultdir}/${resultfile}
+    &> ${resultdir}/${resultfile}
+
+if [ $MEASUREMENTS -gt 0 ]; then
+    # Stop GPU measurements script
+    echo "Stop GPU measurements"
+    if [ -n $MEASUREMENTSCRIPTPID ]; then
+        kill -15 $MEASUREMENTSCRIPTPID >/dev/null 2>&1
+    fi
+fi
 
 echo "Done"
 
 exit 0
+
