@@ -13,18 +13,27 @@
 
 /*
  * Perform the kind of pre-processing for test images
+ * that TensorFlow does in benchmarks/:
+ *
+ * https://github.com/alexandroskoliousis/benchmarks/blob/27b2ec139c86b39ab596321afe08878b36a5adfd/scripts/tf_cnn_benchmarks/preprocessing.py#L198
  */
 static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
-
+	
+	/* Cast image to 32-bit float */
 	crossbowImageCast (record->image);
-
-	/* Resize image */
-
+	
+	/* Get image height and width (and convert to floats) */
 	float h = (float) crossbowImageInputHeight (record->image);
 	float w = (float) crossbowImageInputWidth  (record->image);
-
-	float factor = 1.15;
-
+	
+	/* In ResNet, images are cropped to 256 x 256 and the final image size is 224 x 224.
+	 * It is:
+	 * 
+	 * floor(224 x 1.45) ~= 256
+	 */
+	float factor = 1.145;
+	
+	/* Maintain aspect ratio */
 	float ratio = max(224. / h, 224. / w);
 
 	int resizeheight = (int) (h * ratio * factor);
@@ -32,22 +41,85 @@ static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
 	
 	if (verbose > 0)
 		printf("Resized image to (%d x %d)\n", resizeheight, resizewidth);
-
+	
+	/* Resize the image to shape using the bilinear method (do not align corners) */
 	crossbowImageResize (record->image, resizeheight, resizewidth);
 	
 	if (verbose > 0)
 		printf("Checksum of resized image is %.4f\n", crossbowImageChecksum (record->image));
-
-	/* Crop image */
-
-	int top  = (resizeheight - 224) / 2;
-	int left = (resizewidth  - 224) / 2;
-
+	
+	/* Crop image to size (224, 224) */
+	int top  = floor((float) (resizeheight - 224) / 2.); /* x // y */
+	int left = floor((float) (resizewidth  - 224) / 2.);
+	
 	crossbowImageCrop (record->image, 224, 224, top, left);
 	
 	if (verbose > 0)
 		printf("Checksum of cropped image is %.4f\n", crossbowImageChecksum (record->image));
+	
+	/* Rescale from [0, 255] to [0, 2] */
+	crossbowImageMultiply(record->image, 1. / 127.5);
+	/* Rescale to [-1, 1] */
+	crossbowImageSubtract(record->image, 1.);
+	
 	return;
+}
+
+/*
+ * Perform the kind of pre-processing for training images
+ * that TensorFlow does in benchmarks/:
+ *
+ * https://github.com/alexandroskoliousis/benchmarks/blob/27b2ec139c86b39ab596321afe08878b36a5adfd/scripts/tf_cnn_benchmarks/preprocessing.py#L286
+ */
+static void preprocessTrainingRecord (crossbowRecordP record, int verbose) {
+	
+	(void) verbose;
+	
+	/* Cast image to 32-bit float */
+	crossbowImageCast (record->image);
+
+	/*
+	 * Sample bounding box. If not box is supplied,
+	 * assume the bounding box is the entire image.
+	 *
+	 * Minimum coverage is 0.1
+	 * Aspect ratio range is [0.75, 1.33]
+	 * Area range is [0.05, 1.0]
+	 * Max. attempts is 100
+	 */
+	int height = 0;
+	int width  = 0;
+	int top    = 0;
+	int left   = 0;
+
+	float ratio [2] = {0.75, 1.33};
+	float area  [2] = {0.05, 1.00};
+	
+	dbg("Sample bounding box\n");
+	crossbowImageSampleDistortedBoundingBox (
+		record->image, 
+		record->boxes, 
+		0.1, 
+		&ratio[0],
+		&area [0],
+		100, 
+		&height, &width, &top, &left);
+
+	/* Crop image to the specified bounding box */
+	crossbowImageCrop (record->image, height, width, top, left);
+
+	/* Flip image */
+	dbg("Flip image\n");
+	crossbowImageRandomFlipLeftRight (record->image);
+
+	/* Resize image to shape (224, 224) with the bilinear method (don't align corners) */
+	dbg("Crop image to (224 x 224)\n");
+	crossbowImageResize (record->image, 224, 224);
+	
+	/* Rescale from [0, 255] to [0, 2] */
+	crossbowImageMultiply(record->image, 1. / 127.5);
+	/* Rescale to [-1, 1] */
+	crossbowImageSubtract(record->image, 1.);
 }
 
 /*
@@ -65,12 +137,13 @@ static void *handle (void *args) {
     /* Pin thread to a particular core based on worker id */
 
     cpu_set_t set;
-    int core = 2 + task->id;
+    int core = 16 + task->id;
     CPU_ZERO (&set);
     CPU_SET  (core, &set);
     sched_setaffinity (0, sizeof(set), &set);
     dbg("Decoder #%02d pinned on core %02d\n", task->id, core);
     
+	int bytes = 0;
     /* Iterate over list of tasks */
     int idx;
     for (idx = 0; idx < crossbowArrayListSize (list); ++idx) {
@@ -79,8 +152,13 @@ static void *handle (void *args) {
         crossbowRecordP record = crossbowRecordCreate ();
         /* Read record (thread-safe version) */
         crossbowRecordFileReadSafely (task->file, task->id, task->position, record);
+		bytes += record->length;
         /* Pre-process record */
-        preprocessTestRecord (record, 0);
+		if (task->training) {
+			preprocessTrainingRecord (record, 0);
+		} else {
+			preprocessTestRecord (record, 0);
+		}
         /* Copy decoded (augmented) image to buffer */
         crossbowImageCopy (record->image, task->buffer[0], task->offset[0], 0); /* Ignore limit */
         /* Copy label */
@@ -89,12 +167,14 @@ static void *handle (void *args) {
         /* Free record */
         crossbowRecordFree (record);
     }
+    dbg("Decoder processed %d bytes\n", bytes);
     return args;
 }
 
 crossbowRecordReaderP crossbowRecordReaderCreate (int workers) {
     crossbowRecordReaderP p = NULL;
     p = (crossbowRecordReaderP) crossbowMalloc (sizeof(crossbow_record_reader_t));
+	p->shuffle = 1;
     p->dataset = crossbowListCreate ();
     p->counter = 0;
     p->records = 0;
@@ -188,9 +268,13 @@ void crossbowRecordReaderNext (crossbowRecordReaderP p, crossbowRecordP record) 
 		/* Reset current file */
 		crossbowRecordFileReset (p->current, (crossbowListSize(p->dataset) != 1));
 		if (! crossbowListIteratorHasNext (p->dataset)) {
+			/* Shuffle the files */
+			if (p->shuffle)
+				crossbowListShuffle (p->dataset);
 			/* Reset file iterator */
 			crossbowListIteratorReset (p->dataset);
 			p->wraps ++;
+			info("Wrap #%03d\n", p->wraps);
 		}
 		p->current = crossbowListIteratorNext (p->dataset);
 	}
@@ -207,9 +291,13 @@ crossbowRecordFileP crossbowRecordReaderNextPointer (crossbowRecordReaderP p, in
         /* Reset current file */
         crossbowRecordFileReset (p->current, (crossbowListSize(p->dataset) != 1));
         if (! crossbowListIteratorHasNext (p->dataset)) {
+			/* Shuffle the files */
+			if (p->shuffle)
+				crossbowListShuffle (p->dataset);
             /* Reset file iterator */
             crossbowListIteratorReset (p->dataset);
             p->wraps ++;
+			info("Wrap #%03d\n", p->wraps);
         }
         p->current = crossbowListIteratorNext (p->dataset);
     }
@@ -221,7 +309,8 @@ crossbowRecordFileP crossbowRecordReaderNextPointer (crossbowRecordReaderP p, in
 /*
  * Read `count` examples of size `size` into `buffer`
  */
-void crossbowRecordReaderRead (crossbowRecordReaderP p, 
+void crossbowRecordReaderRead (crossbowRecordReaderP p,
+	unsigned training,
     int count, 
     int size,
     void *buffer,
@@ -269,6 +358,7 @@ void crossbowRecordReaderRead (crossbowRecordReaderP p,
                 /* Create new task */
                 task = crossbowMalloc (sizeof(crossbow_record_reader_task_t));
                 /* Fill-in task */
+				task->training = training;
                 task->id = id;
                 task->jc = p->jc;
 
@@ -331,6 +421,7 @@ void crossbowRecordReaderRead (crossbowRecordReaderP p,
 }
 
 void crossbowRecordReaderReadProperly (crossbowRecordReaderP p,
+	unsigned training,
     int count,
     int *size,
 	int b,
@@ -346,9 +437,9 @@ void crossbowRecordReaderReadProperly (crossbowRecordReaderP p,
 
     int partition;
 
-    crossbowRecordFileP file;
-    int position;
-
+    crossbowRecordFileP file = NULL;
+    int position = 0;
+	
     crossbowArrayListP list;
     crossbowRecordReaderTaskP task;
 
@@ -358,7 +449,7 @@ void crossbowRecordReaderReadProperly (crossbowRecordReaderP p,
     nullPointerException (p);
     invalidConditionException (p->finalised);
 
-    invalidConditionException (p->workers > 1);
+    invalidConditionException (p->workers > 0);
 
 	/* Create worker pool */
 	pthread_t *pool = (pthread_t *) crossbowMalloc (p->workers * sizeof(pthread_t));
@@ -387,6 +478,7 @@ void crossbowRecordReaderReadProperly (crossbowRecordReaderP p,
 			/* Create new task */
 			task = crossbowMalloc (sizeof(crossbow_record_reader_task_t));
 			/* Fill-in task */
+			task->training = training;
 			task->id = id;
 			task->jc = p->jc;
 
@@ -433,11 +525,11 @@ void crossbowRecordReaderReadProperly (crossbowRecordReaderP p,
 	crossbowFree (pool, (p->workers * sizeof(pthread_t)));
 
 	tstamp_t dt = crossbowTimerElapsedTime (timer);
-	info("%d images processed in %llu usecs\n", count, dt);
+	double throughput = (((double) count) * 1000000.0) / ((double) dt);
+	info("%6d images processed in %7llu usecs: %7.1f images/sec (current file is %s)\n", count, dt, throughput, ((! file) ? "None" : file->filename));
 	crossbowTimerFree (timer);
 
 	return;
-
 }
 
 void crossbowRecordReaderFree (crossbowRecordReaderP p) {
@@ -446,8 +538,10 @@ void crossbowRecordReaderFree (crossbowRecordReaderP p) {
     if (p->dataset) {
     	while (! crossbowListEmpty(p->dataset)) {
     		crossbowRecordFileP file = crossbowListRemoveFirst (p->dataset); 
+			/* info("Free record file %s\n", file->filename); */
     		crossbowRecordFileFree (file);
     	}
+		/* info("Free list of files\n"); */
     	crossbowListFree (p->dataset);
     }
     crossbowFree(p, sizeof(crossbow_record_reader_t));

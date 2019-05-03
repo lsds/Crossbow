@@ -149,7 +149,9 @@ INCLUDES := -I/usr/include -D_GNU_SOURCE
 INCLUDES += -I\$(CUDA_PATH)/include
 
 # OpenBLAS
-INCLUDES += -I\$(BLAS_PATH)/include
+ifneq (\$(BLAS_PATH),)
+	INCLUDES += -I\$(BLAS_PATH)/include
+endif
 
 # NCCL
 ifneq (\$(NCCL_PATH),)
@@ -157,7 +159,9 @@ ifneq (\$(NCCL_PATH),)
 endif
 
 # Turbo-JPEG
-INCLUDES += -I\$(JPEG_PATH)
+ifneq (\$(JPEG_PATH),)
+	INCLUDES += -I\$(JPEG_PATH)
+endif
 
 # JNI
 ifeq (\$(OS),Darwin)
@@ -205,8 +209,8 @@ ifneq (\$(SMMAX),)
 endif
 endif
 
-OBJS := executioncontext.o timer.o threadsafequeue.o waitfreequeue.o thetaqueue.o memorymanager.o list.o bytebuffer.o bufferpool.o arraylist.o stream.o kernel.o operator.o operatordependency.o dataflow.o variableschema.o variable.o localvariable.o kernelconfigurationparameter.o kernelscalar.o model.o modelmanager.o resulthandler.o databuffer.o kernelmap.o batch.o callbackhandler.o taskhandler.o solverconfiguration.o measurementlist.o device.o lightweightdatasethandler.o recorddataset.o doublebuffer.o cudnn/cudnntensor.o cudnn/cudnnconvparams.o cudnn/cudnnpoolparams.o cudnn/cudnnreluparams.o cudnn/cudnnsoftmaxparams.o cudnn/cudnnbatchnormparams.o cudnn/cudnndropoutparams.o cudnn/cudnnhelper.o
-KNLS := kernels/classify.o kernels/accuracy.o kernels/gradientdescentoptimiser.o kernels/innerproduct.o kernels/innerproductgradient.o kernels/matmul.o kernels/noop.o kernels/noopstateless.o kernels/softmax.o kernels/softmaxgradient.o kernels/softmaxloss.o kernels/softmaxlossgradient.o kernels/pool.o kernels/poolgradient.o kernels/relu.o kernels/relugradient.o kernels/conv.o kernels/convgradient.o kernels/dropout.o kernels/dropoutgradient.o kernels/lrn.o kernels/lrngradient.o kernels/matfact.o kernels/cudnnconv.o kernels/cudnnconvgradient.o kernels/cudnnpool.o kernels/cudnnpoolgradient.o kernels/cudnnrelu.o kernels/cudnnrelugradient.o kernels/cudnnsoftmax.o kernels/cudnnsoftmaxgradient.o kernels/datatransform.o kernels/batchnorm.o kernels/batchnormgradient.o kernels/cudnnbatchnorm.o kernels/cudnnbatchnormgradient.o kernels/cudnndropout.o kernels/cudnndropoutgradient.o kernels/elementwiseop.o kernels/elementwiseopgradient.o kernels/concat.o kernels/concatgradient.o kernels/sleep.o
+OBJS := executioncontext.o timer.o threadsafequeue.o waitfreequeue.o thetaqueue.o memorymanager.o list.o bytebuffer.o bufferpool.o arraylist.o stream.o kernel.o operator.o operatordependency.o dataflow.o variableschema.o variable.o localvariable.o kernelconfigurationparameter.o kernelscalar.o model.o modelmanager.o resulthandler.o databuffer.o kernelmap.o batch.o callbackhandler.o taskhandler.o solverconfiguration.o measurementlist.o device.o lightweightdatasethandler.o recorddataset.o doublebuffer.o synch/common.o synch/default.o synch/downpour.o synch/eamsgd.o synch/hogwild.o synch/polyakruppert.o synch/sma.o synch/synchronouseamsgd.o synch/synchronoussgd.o cudnn/cudnntensor.o cudnn/cudnnconvparams.o cudnn/cudnnpoolparams.o cudnn/cudnnreluparams.o cudnn/cudnnsoftmaxparams.o cudnn/cudnnbatchnormparams.o cudnn/cudnndropoutparams.o cudnn/cudnnhelper.o
+KNLS := kernels/classify.o kernels/accuracy.o kernels/gradientdescentoptimiser.o kernels/innerproduct.o kernels/innerproductgradient.o kernels/matmul.o kernels/noop.o kernels/noopstateless.o kernels/softmax.o kernels/softmaxgradient.o kernels/softmaxloss.o kernels/softmaxlossgradient.o kernels/pool.o kernels/poolgradient.o kernels/relu.o kernels/relugradient.o kernels/conv.o kernels/convgradient.o kernels/dropout.o kernels/dropoutgradient.o kernels/lrn.o kernels/lrngradient.o kernels/matfact.o kernels/cudnnconv.o kernels/cudnnconvgradient.o kernels/cudnnpool.o kernels/cudnnpoolgradient.o kernels/cudnnrelu.o kernels/cudnnrelugradient.o kernels/cudnnsoftmax.o kernels/cudnnsoftmaxgradient.o kernels/datatransform.o kernels/batchnorm.o kernels/batchnormgradient.o kernels/cudnnbatchnorm.o kernels/cudnnbatchnormgradient.o kernels/cudnndropout.o kernels/cudnndropoutgradient.o kernels/elementwiseop.o kernels/elementwiseopgradient.o kernels/concat.o kernels/concatgradient.o kernels/sleep.o kernels/optimisers/default.o kernels/optimisers/hogwild.o kernels/optimisers/downpour.o kernels/optimisers/eamsgd.o kernels/optimisers/synchronouseamsgd.o kernels/optimisers/synchronoussgd.o kernels/optimisers/sma.o kernels/optimisers/polyakruppert.o
 
 CROSSBOWBASEINCLUDES := memorymanager.h debug.h utils.h
 
@@ -226,8 +230,8 @@ uk_ac_imperial_lsds_crossbow_device_ObjectRef.h:
 libCPU.so: CPU.o
 	\$(NV) \$(LFL) -shared -o libCPU.so CPU.o \$(LIBS)
 	
-libGPU.so: GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o \$(OBJS) \$(KNLS)
-	\$(NV) \$(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o \$(OBJS) \$(KNLS) \$(LIBS)
+libGPU.so: GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/random.o random/generator.o \$(OBJS) \$(KNLS)
+	\$(NV) \$(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/random.o random/generator.o \$(OBJS) \$(KNLS) \$(LIBS)
 	
 libBLAS.so: BLAS.o \$(OBJS) \$(KNLS)
 	\$(NV) \$(LFL) -shared -o libBLAS.so BLAS.o \$(OBJS) \$(KNLS) \$(LIBS)
@@ -301,6 +305,37 @@ recorddataset.o: recorddataset.c recorddataset.h \$(CROSSBOWBASEINCLUDES)
 doublebuffer.o: doublebuffer.c doublebuffer.h \$(CROSSBOWBASEINCLUDES)
 	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c \$< -o \$@
 
+# === [Helpers for SGD (cross-replica synchronisation variants)] ===
+#
+
+synch/common.o: synch/common.c synch/common.h executioncontext.h \$(CROSSBOWBASEINCLUDES)
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+
+synch/default.o: synch/default.c synch/default.h synch/common.h executioncontext.h \$(CROSSBOWBASEINCLUDES)
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+synch/downpour.o: synch/downpour.c synch/downpour.h synch/common.h executioncontext.h \$(CROSSBOWBASEINCLUDES)
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+synch/eamsgd.o: synch/eamsgd.c synch/eamsgd.h synch/common.h executioncontext.h \$(CROSSBOWBASEINCLUDES)
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+synch/hogwild.o: synch/hogwild.c synch/hogwild.h synch/common.h executioncontext.h \$(CROSSBOWBASEINCLUDES)
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+synch/polyakruppert.o: synch/polyakruppert.c synch/polyakruppert.h synch/common.h executioncontext.h \$(CROSSBOWBASEINCLUDES)
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+synch/sma.o: synch/sma.c synch/sma.h synch/common.h executioncontext.h \$(CROSSBOWBASEINCLUDES)
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+synch/synchronouseamsgd.o: synch/synchronouseamsgd.c synch/synchronouseamsgd.h synch/common.h executioncontext.h \$(CROSSBOWBASEINCLUDES)
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+synch/synchronoussgd.o: synch/synchronoussgd.c synch/synchronoussgd.h synch/common.h executioncontext.h \$(CROSSBOWBASEINCLUDES)
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+
+# === [End of SGD helpers] ===
 
 image/recordreader.o: image/recordreader.c image/recordreader.h \$(CROSSBOWBASEINCLUDES)
 	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c \$< -o \$@
@@ -500,7 +535,7 @@ kernels/cudnndropoutgradient.o: kernels/cudnndropoutgradient.cu kernels/cudnndro
 	
 # === [Kernel compilation] ===
 #
-	
+
 kernels/accuracy.o: kernels/accuracy.cu kernels/accuracy.h
 	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c \$< -o \$@
 
@@ -509,6 +544,34 @@ kernels/classify.o: kernels/classify.cu kernels/classify.h
 
 kernels/gradientdescentoptimiser.o: kernels/gradientdescentoptimiser.cu kernels/gradientdescentoptimiser.h
 	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c \$< -o \$@
+
+# === [Helpers for SGD (per replica sychronisation variants)] ===
+
+kernels/optimisers/default.o: kernels/optimisers/default.cu kernels/optimisers/default.h
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+kernels/optimisers/hogwild.o: kernels/optimisers/hogwild.cu kernels/optimisers/hogwild.h
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+
+kernels/optimisers/downpour.o: kernels/optimisers/downpour.cu kernels/optimisers/downpour.h
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+kernels/optimisers/eamsgd.o: kernels/optimisers/eamsgd.cu kernels/optimisers/eamsgd.h
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+kernels/optimisers/synchronouseamsgd.o: kernels/optimisers/synchronouseamsgd.cu kernels/optimisers/synchronouseamsgd.h
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+kernels/optimisers/synchronoussgd.o: kernels/optimisers/synchronoussgd.cu kernels/optimisers/synchronoussgd.h
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+
+kernels/optimisers/sma.o: kernels/optimisers/sma.cu kernels/optimisers/sma.h
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+kernels/optimisers/polyakruppert.o: kernels/optimisers/polyakruppert.cu kernels/optimisers/polyakruppert.h
+	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c $< -o \$@
+    
+# === [End of SGD helpers] ===
 
 kernels/innerproduct.o: kernels/innerproduct.cu kernels/innerproduct.h
 	\$(NV) \$(INCLUDES) \$(LFL) \$(GENCODE) -c \$< -o \$@

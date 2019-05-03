@@ -48,6 +48,10 @@ FORMAT="csv,nounits"
 
 # Try filename
 FILENAME="measurements.csv"
+if [ $# -eq 1 ]; then
+    FILENAME="$1"
+fi
+
 if [ -f $FILENAME ]; then
     echo "error: $FILENAME already exists"
     exit 1

@@ -35,7 +35,7 @@ void crossbowRecordFileOpen (crossbowRecordFileP p) {
 		exit (1);
 	}
     /* Allocate a file pointer per worker */
-    if (p->workers > 1) {
+    if (p->workers > 0) {
         p->f = (FILE **) crossbowMalloc (p->workers * sizeof(FILE *));
         for (i = 0; i < p->workers; ++i) {
             p->f[i] = fopen(p->filename, "rb");

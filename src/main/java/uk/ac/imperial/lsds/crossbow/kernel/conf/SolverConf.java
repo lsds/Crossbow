@@ -31,6 +31,8 @@ public class SolverConf implements IConf {
 	
 	private int currentstep;
 	private int [] stepvalues;
+
+	private int warmupsteps;
 	
 	private TrainingUnit stepUnit;
 	private boolean converted;
@@ -83,6 +85,8 @@ public class SolverConf implements IConf {
 		stepvalues = null;
 		stepUnit = TrainingUnit.TASKS;
 		converted = false;
+		
+		warmupsteps = 0;
 		
 		alpha = 0.5F;
 		tau = 1;
@@ -217,6 +221,18 @@ public class SolverConf implements IConf {
 		}
 		converted = true;
 		return stepvalues;
+	}
+
+	public SolverConf setWarmupSteps (int warmupsteps) {
+		this.warmupsteps = warmupsteps;
+		return this;
+	}
+
+	public int getWarmupSteps () {
+		if (stepUnit != TrainingUnit.TASKS)
+			return (warmupsteps * parent.numberOfTasksPerEpoch());
+		else
+			return warmupsteps;
 	}
 	
 	public String getStepValuesToString () {
@@ -358,7 +374,15 @@ public class SolverConf implements IConf {
 		case MULTISTEP:
 			if (stepvalues == null)
 				throw new  NullPointerException();
-			TheGPU.getInstance().setLearningRateDecayPolicyMultiStep (baseLearningRate, gamma, getStepValues());
+			TheGPU.getInstance().setLearningRateDecayPolicyMultiStep (baseLearningRate, gamma, 0, getStepValues());
+			break;
+		case LSR:
+			if (stepvalues == null)
+				throw new  NullPointerException();
+			if (warmupsteps == 0)
+				throw new IllegalStateException ("error: invalid number of warm-up steps");
+			TheGPU.getInstance().setLearningRateDecayPolicyMultiStep (baseLearningRate, gamma, 
+							getWarmupSteps(), getStepValues());
 			break;
 		case EXP:
 			TheGPU.getInstance().setLearningRateDecayPolicyExp (baseLearningRate, gamma);
@@ -399,6 +423,7 @@ public class SolverConf implements IConf {
 		opts.add(new Option("--clip-gradient-threshold"   ).setType ( String.class));
 		opts.add(new Option("--step-size"                 ).setType (Integer.class));
 		opts.add(new Option("--step-values"               ).setType ( String.class));
+		opts.add(new Option("--warmup-steps"              ).setType (Integer.class));
 		opts.add(new Option("--learning-rate-step-unit"   ).setType ( String.class));
 		opts.add(new Option("--alpha"                     ).setType (  Float.class));
 		opts.add(new Option("--tau"                       ).setType (Integer.class));
@@ -428,6 +453,7 @@ public class SolverConf implements IConf {
 		s.append (String.format("Regularisation type is '%s'\n", regularizationType.toString()));
 		s.append (String.format("Step size is %d\n", stepsize));
 		s.append (String.format("Step values are %s\n", getStepValuesToString()));
+		s.append (String.format("Warmup steps are %d\n", getWarmupSteps()));
 		s.append (String.format("Alpha is %.5f\n", alpha));
 		s.append (String.format("Tau is %d\n", tau));
 		s.append (String.format("Base model momentum is %.5f\n", baseModelMomentum));

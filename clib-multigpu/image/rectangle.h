@@ -6,8 +6,8 @@
 typedef struct crossbow_rectangle *crossbowRectangleP;
 typedef struct crossbow_rectangle {
     int xmin;
-    int xmax;
     int ymin;
+    int xmax;
     int ymax;
 } crossbow_rectangle_t;
 

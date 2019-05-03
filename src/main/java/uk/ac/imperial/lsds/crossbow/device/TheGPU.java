@@ -276,7 +276,7 @@ public class TheGPU {
 	public native int setLearningRateDecayPolicyFixed     (float rate);
 	public native int setLearningRateDecayPolicyInv       (float rate, double gamma, double power);
 	public native int setLearningRateDecayPolicyStep      (float rate, double gamma, int step);
-	public native int setLearningRateDecayPolicyMultiStep (float rate, double gamma, int [] step);
+	public native int setLearningRateDecayPolicyMultiStep (float rate, double gamma, int warmup, int [] step);
 	public native int setLearningRateDecayPolicyExp       (float rate, double gamma);
 	public native int setLearningRateDecayPolicyCircular  (float [] rate, int superconvergence, float [] momentum, int step);
 	

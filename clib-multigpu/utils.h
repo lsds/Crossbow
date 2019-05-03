@@ -90,9 +90,9 @@ typedef enum crossbow_cudnn_kernel_type { NONE = 0, CONV, POOL, RELU, SOFTMAX, B
 
 typedef enum crossbow_model_synchronisation_type { BSP = 0, SSP, ASP } crossbowModelSynchronisation_t;
 
-typedef enum crossbow_model_update_type { DEFAULT = 0, WORKER, EAMSGD, SYNCHRONOUSEAMSGD, DOWNPOUR } crossbowModelUpdate_t;
+typedef enum crossbow_model_update_type { DEFAULT = 0, WORKER, EAMSGD, SYNCHRONOUSEAMSGD, DOWNPOUR, HOGWILD, POLYAK_RUPPERT, SMA } crossbowModelUpdate_t;
 
-typedef enum crossbow_learning_rate_decay_policy_type { FIXED = 0, INV, STEP, MULTISTEP, EXP, CLR } crossbowLearningRateDecayPolicy_t;
+typedef enum crossbow_learning_rate_decay_policy_type { FIXED = 0, INV, STEP, MULTISTEP, LSR, EXP, CLR } crossbowLearningRateDecayPolicy_t;
 
 typedef enum crossbow_operator_dependency_type { START_BEFORE_START = 0, END_BEFORE_START } crossbowOperatorDependency_t;
 

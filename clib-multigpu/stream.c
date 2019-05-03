@@ -86,6 +86,9 @@ crossbowStreamP crossbowStreamCreate (int id, crossbowDeviceP dev, int ops, int 
 	/* Set input data buffer pointers */
 	crossbowVariableSetDataBuffer (p->examples, p->input, 0);
 	crossbowVariableSetDataBuffer (p->labels,   p->input, examples->bytes);
+	
+	/* Used only with record datasets */
+	p->dataset = NULL;
 
 	p->ops = ops;
 	p->outputs = (crossbowListP *) crossbowMalloc (p->ops * sizeof (crossbowListP));

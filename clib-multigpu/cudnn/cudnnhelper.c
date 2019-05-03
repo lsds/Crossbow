@@ -11,6 +11,10 @@ const char *cudnnActivationModeString (cudnnActivationMode_t mode) {
 #if CUDNN_MAJOR >= 6
 	case CUDNN_ACTIVATION_ELU:          return "CUDNN_ACTIVATION_ELU";
 #endif
+#if CUDNN_MAJOR >= 7
+	case CUDNN_ACTIVATION_IDENTITY:     return "CUDNN_ACTIVATION_IDENTITY";
+#endif
+	default: return "CUDNN_ACTIVATION_UNKNOWN";
 	}
 
 	return NULL;

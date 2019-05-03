@@ -9,7 +9,7 @@
 #include <nccl.h>
 
 #undef GPU_VERBOSE
-// #define GPU_VERBOSE
+/* #define GPU_VERBOSE */
 
 #undef KERNEL_CHECKSUM
 /* #define COMPUTE_CHECKSUM */

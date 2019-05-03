@@ -63,14 +63,25 @@ void crossbowImageStartDecoding (crossbowImageP p) {
 		err("Failed to read JPEG header\n");
 	/* Try integer fast... */
 	p->info->dct_method = JDCT_IFAST;
-	p->info->out_color_space = JCS_RGB;
-	jpeg_start_decompress(p->info);
-	/* dbg("JPEG image (%d x %d x %d)\n", p->info->output_height, p->info->output_width, p->info->output_components); */
-	/* JPEG images must have 3 channels */
-	if (p->info->output_components != 3) {
-		printf("Hm. Image has %d channels?\n", p->info->output_components);
+	/* p->info->out_color_space = JCS_RGB; */
+	if (p->info->jpeg_color_space == JCS_CMYK || p->info->jpeg_color_space == JCS_YCCK) {
+		/* Always use CMYK for output in a 4 channel JPEG. The library 
+		 * has a builtin decoder. We will later convert to RGB.
+		 */
+		info("Set colour space to CMYK\n");
+		p->info->out_color_space = JCS_CMYK;
+	} else {
+		p->info->out_color_space = JCS_RGB;
 	}
-	invalidConditionException (p->info->output_components == p->channels);
+	jpeg_start_decompress(p->info);
+	if (p->info->out_color_space == JCS_CMYK) {
+		info("JPEG image (%d x %d x %d)\n", 
+			p->info->output_height, p->info->output_width, p->info->output_components);
+	}
+	/* 
+	 * JPEG images must have 3 channels. But we need to account for CMYK images.
+	 * invalidConditionException (p->info->output_components == p->channels);
+	 */
 	p->started = 1;
 	return;
 }
@@ -79,11 +90,27 @@ void crossbowImageDecode (crossbowImageP p) {
 	nullPointerException(p);
 	/* Is `p->info` filled? */
 	invalidConditionException (p->started);
+	unsigned CMYK = (p->info->out_color_space == JCS_CMYK);
 	if (p->decoded)
 		return;
 	p->elements = crossbowImageInputHeight (p) * crossbowImageInputWidth (p) * crossbowImageChannels (p);
+	if (CMYK) {
+		info("Allocate an image buffer of size (%d x %d x %d)\n",
+			crossbowImageInputHeight (p),
+			crossbowImageInputWidth  (p),
+			crossbowImageChannels    (p)
+		);
+	}
 	p->img = (unsigned char *) crossbowMalloc (p->elements);
-
+	
+	unsigned char *temp[1];
+	temp[0] = NULL;
+	if (CMYK) {
+		/* Allocate temporal buffer */
+		info("Allocate a temporal buffer of (%d x %d)\n", p->info->output_width, p->info->output_components);
+		temp[0] = (unsigned char *) crossbowMalloc (p->info->output_width * p->info->output_components);
+	}
+	
 	/* Decompress */
 
 	/* Compute row stride */
@@ -91,12 +118,48 @@ void crossbowImageDecode (crossbowImageP p) {
 	unsigned char *buffer[1];
 
 	/* By default, scanlines will come out in RGBRGBRGB...  order */
+	int lines = 0;
 	while (p->info->output_scanline < (unsigned int) crossbowImageInputHeight (p)) {
-
+		/* Set pointer to image buffer */
 		buffer[0] = p->img + p->info->output_scanline * stride;
-
-		jpeg_read_scanlines(p->info, buffer, 1);
+		if (CMYK) {
+			/* Read into temporal buffer */
+			lines += jpeg_read_scanlines(p->info, temp, 1);
+			/* Convert CMYK to RGB */
+			for (int i = 0; i < crossbowImageInputWidth (p); ++i) {
+				int offset = 4 * i;
+				const int c = (int) temp[0][offset + 0];
+				const int m = (int) temp[0][offset + 1];
+				const int y = (int) temp[0][offset + 2];
+				const int k = (int) temp[0][offset + 3];
+				int r, g, b;
+				if (p->info->saw_Adobe_marker) {
+					r = (k * c) / 255;
+					g = (k * m) / 255;
+					b = (k * y) / 255;
+				} else {
+					r = (255 - k) * (255 - c) / 255;
+					g = (255 - k) * (255 - m) / 255;
+					b = (255 - k) * (255 - y) / 255;
+				}
+				buffer[0][3 * i + 0] = r;
+				buffer[0][3 * i + 1] = g;
+				buffer[0][3 * i + 2] = b;
+			}
+		} else {
+			/* Set pointer to image buffer */
+			buffer[0] = p->img + p->info->output_scanline * stride;
+			jpeg_read_scanlines(p->info, buffer, 1);
+		}
 	}
+	if (CMYK) {
+		info("%d lines read\n", lines);
+	}
+	
+	if (CMYK) {
+		crossbowFree (temp[0], p->info->output_width * p->info->output_components);
+	}
+	
 	jpeg_finish_decompress(p->info);
 
 	p->decoded = 1;
@@ -519,6 +582,7 @@ void crossbowImageDumpAsFloat (crossbowImageP p, int pixels) {
 int crossbowImageCopy (crossbowImageP p, void * buffer, int offset, int limit) {
     
     nullPointerException (p);
+	
     invalidConditionException (p->decoded);
     invalidConditionException (p->isfloat);
     
@@ -529,6 +593,7 @@ int crossbowImageCopy (crossbowImageP p, void * buffer, int offset, int limit) {
     
     /* Copy p->data to buffer (starting at offset) */
     memcpy ((void *)(buffer + offset), (void *)(p->data), length);
+	
     return length;
 }
 
@@ -709,68 +774,69 @@ void crossbowImageResize (crossbowImageP p, int height, int width) {
 	return;
 }
 
-static unsigned generateRandomCrop (crossbowRectangleP crop, int originalHeight, int originalWidth, float *area, float aspectRatio) {
+static unsigned crossbowImageGenerateRandomCrop (crossbowRectangleP p, int width, int height, float *area, float ratio) {
+	
+	nullPointerException (p);
+	
+	/* If any of the width, height, min/max area, or aspect ratio is less or equal to 0, return false */
+	invalidConditionException(width   > 0);
+	invalidConditionException(height  > 0);
+	invalidConditionException(ratio   > 0);
+	invalidConditionException(area[0] > 0);
+	invalidConditionException(area[1] > 0);
+	invalidConditionException(area[0] <= area[1]);
+	
+	/* Compute min and max relative crop area */
+	float minArea = area[0] * width * height;
+	float maxArea = area[1] * width * height;
 
-	/* If any of height, width, area, aspect ratio is less that 0, return 0; */
-
-	float minArea = area[0] * originalWidth * originalHeight;
-	float maxArea = area[1] * originalWidth * originalHeight;
-
-	int minHeight = (int) lrintf (sqrt (minArea / aspectRatio));
-	int maxHeight = (int) lrintf (sqrt (maxArea / aspectRatio));
-
-	/* Find smaller max height s.t. round (maxHeight x acpectRatio) <= originalWidth */
-	if (lrintf (maxHeight * aspectRatio) > originalWidth) {
-
+	int minHeight = (int) lrintf (sqrt (minArea / ratio));
+	int maxHeight = (int) lrintf (sqrt (maxArea / ratio));
+	
+	/* Find smaller max height s.t. round (maxHeight x ratio) <= width */
+	if (lrintf (maxHeight * ratio) > width) {
 		float epsilon = 0.0000001;
-		maxHeight = (int) ((originalWidth + 0.5 - epsilon) / aspectRatio);
+		maxHeight = (int) ((width + 0.5 - epsilon) / ratio);
 	}
-
-	if (maxHeight > originalHeight)
-		maxHeight = originalHeight;
-
+	
+	if (maxHeight > height)
+		maxHeight = height;
+	
 	if (minHeight > maxHeight)
 		minHeight = maxHeight;
-
+	
 	if (minHeight < maxHeight)
-		/* Generate a random number of the closed range [0, (maxHeight - minHeight)]*/
+		/* Generate a random number of the closed range [0, (maxHeight - minHeight)] */
 		minHeight += crossbowYarngNext (0, maxHeight - minHeight + 1);
-
-	int minWidth = (int) lrintf (minHeight * aspectRatio);
-
+	
+	int minWidth = (int) lrintf (minHeight * ratio);
+	/* Check that width is less or equal to the original width */
+	invalidConditionException(minWidth <= width);
+	
 	float newArea = (float) (minHeight * minWidth);
 
 	/* Deal with rounding errors */
-
 	if (newArea < minArea) {
+		/* Try a bigger rectangle */
 		minHeight += 1;
-		minWidth = (int) lrintf (minHeight * aspectRatio);
+		minWidth = (int) lrintf (minHeight * ratio);
 		newArea = (float) (minHeight * minWidth);
 	}
-
-	if (newArea > maxArea) {
-		minHeight -= 1;
-		minWidth = (int) lrintf (minHeight * aspectRatio);
-		newArea = (float) (minHeight * minWidth);
-	}
-
-	if (newArea < minArea || newArea > maxArea || minWidth > originalWidth || minHeight > originalHeight || minWidth <= 0 || minHeight <= 0)
+	
+	if ((newArea < minArea) || (newArea > maxArea) || (minWidth <= 0) || (minWidth > width) || (minHeight <= 0) || (minHeight > height)) {
 		return 0;
-
-	int x = 0;
-	if (minWidth < originalWidth) {
-		x = crossbowYarngNext (0, originalWidth - minWidth);
 	}
-
+	
 	int y = 0;
-	if (minHeight < originalHeight) {
-		y = crossbowYarngNext (0, originalHeight - minHeight);
-	}
-
-	crop->xmin = x;
-	crop->ymin = y;
-	crop->xmax = x + minWidth;
-	crop->ymax = y + minHeight;
+	if (minHeight < height)
+		y = crossbowYarngNext (0, height - minHeight);
+	
+	int x = 0;
+	if (minWidth < width)
+		x = crossbowYarngNext (0, width - minWidth);
+	
+	/* Configure rectangle */
+	crossbowRectangleSet (p, x, y, x + minWidth, y + minHeight);
 
 	return 1;
 }
@@ -779,67 +845,80 @@ void crossbowImageSampleDistortedBoundingBox (crossbowImageP p, crossbowArrayLis
 	int idx;
 	nullPointerException(p);
 
-	int currentHeight = (int) crossbowImageCurrentHeight (p);
-	int currentWidth  = (int) crossbowImageCurrentWidth  (p);
-
+	int h = (int) crossbowImageCurrentHeight (p);
+	int w = (int) crossbowImageCurrentWidth  (p);
+	
 	/* Convert bounding boxes to rectangles. If there are none, use entire image by default */
+	dbg("Convert bounding boxes to rectangles\n");
 	crossbowArrayListP rectangles = NULL;
 	if (boxes) {
+		/* Allocate as many slots as the number of boxes */
 		rectangles = crossbowArrayListCreate (crossbowArrayListSize (boxes));
 		for (idx = 0; idx < crossbowArrayListSize (boxes); ++idx) {
 
 			crossbowBoundingBoxP box = (crossbowBoundingBoxP) crossbowArrayListGet (boxes, idx);
-			int xmin = box->xmin * currentWidth;
-			int ymin = box->ymin * currentHeight;
-			int xmax = box->xmax * currentWidth;
-			int ymax = box->ymax * currentHeight;
-
+			if (! crossbowBoundingBoxIsValid(box))
+				err("Invalid bounding box");
+			
+			int xmin = box->xmin * w;
+			int ymin = box->ymin * h;
+			int xmax = box->xmax * w;
+			int ymax = box->ymax * h;
+			
 			crossbowRectangleP rectangle = crossbowRectangleCreate (xmin, ymin, xmax, ymax);
 			crossbowArrayListSet (rectangles, idx, rectangle);
 		}
 	} else {
 		rectangles = crossbowArrayListCreate (1);
-		crossbowArrayListSet (rectangles, 0, crossbowRectangleCreate (0, 0, currentWidth, currentHeight));
+		crossbowArrayListSet (rectangles, 0, crossbowRectangleCreate (0, 0, w, h));
 	}
-
+	
 	crossbowRectangleP crop = crossbowRectangleCreate (0, 0, 0, 0);
 	unsigned generated = 0;
 	int i;
 	for (i = 0; i < attempts; ++i) {
-		float random = 0.1;
-		/* Sample aspect ratio (within bounds) */
-		float sample = random * (ratio[1] - ratio[0]) + ratio[0];
-		if (generateRandomCrop (crop, currentHeight, currentWidth, area, sample)) {
+		
+		/* Sample aspect ratio (within ratio bounds) */
+		float sample = crossbowYarngNext (0, 1) * (ratio[1] - ratio[0]) + ratio[0];
+		
+		dbg("Generate random crop\n");
+		if (crossbowImageGenerateRandomCrop (crop, w, h, area, sample)) {
 
+			dbg("Check coverage\n");
 			if (crossbowRectangleCovers(crop, coverage, rectangles)) {
 				generated = 1;
 				break;
 			}
 		}
 	}
-	if (! generated)
-		crossbowRectangleSet (crop, 0, 0, currentWidth, currentHeight);
+	if (! generated) {
+		/* Set the entire image as the bounding box */
+		crossbowRectangleSet (crop, 0, 0, w, h);
+	}
 
 	/* Determine cropping parameters for the bounding box */
+	dbg("Set cropping parameters\n");
 	*width  = crop->xmax - crop->xmin;
 	*height = crop->ymax - crop->ymin;
-
-	*top  = crop->xmin;
-	*left = crop->ymin;
+	
+	/* be careful of the order */
+	*top  = crop->ymin;
+	*left = crop->xmin;
 
 	/* Ensure sampled bounding box fits current image dimensions */
-	invalidConditionException (currentWidth  >= (*left + *width ));
-	invalidConditionException (currentHeight >= (*top  + *height));
-
+	invalidConditionException (w >= (*left + *width));
+	invalidConditionException (h >= (*top  + *height));
+	
 	/* Free local state */
-
-	crossbowRectangleFree (crop);
-	for (i = 0; i < crossbowArrayListSize (rectangles); ++i) {
-		crossbowRectangleP rect = (crossbowRectangleP) crossbowArrayListGet (rectangles, i);
+	
+	for (idx = 0; idx < crossbowArrayListSize (rectangles); ++idx) {
+		crossbowRectangleP rect = (crossbowRectangleP) crossbowArrayListGet (rectangles, idx);
 		crossbowRectangleFree (rect);
 	}
 	crossbowArrayListFree (rectangles);
-
+	
+	crossbowRectangleFree (crop);
+	
 	return;
 }
 
