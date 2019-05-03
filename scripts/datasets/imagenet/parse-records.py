@@ -1,9 +1,8 @@
 import sys
+# Run the command
 import os
 import math
 import numpy as np
-
-import argparse
 
 import tensorflow as tf
 
@@ -39,50 +38,40 @@ def _parse(record):
             ]
         }
     )
-
+    
     features = tf.parse_single_example(record, feature_map)
-
+    
     label = tf.cast(features['image/class/label'], dtype=tf.int32)
     image = features['image/encoded']
-
+    
     height = tf.cast(features['image/height'], dtype=tf.int32)
     width  = tf.cast(features['image/width'],  dtype=tf.int32)
-
+    
     xmin = tf.expand_dims(features['image/object/bbox/xmin'].values, 0)
     ymin = tf.expand_dims(features['image/object/bbox/ymin'].values, 0)
     xmax = tf.expand_dims(features['image/object/bbox/xmax'].values, 0)
     ymax = tf.expand_dims(features['image/object/bbox/ymax'].values, 0)
-
+    
     # bbox = tf.concat([ymin, xmin, ymax, xmax], 0)
     # bbox = tf.expand_dims(bbox, 0)
     # bbox = tf.transpose(bbox, [0, 2, 1])
-
+    
     return image, height, width, label, xmin, ymin, xmax, ymax, features['image/class/text']
 
 if __name__ == "__main__":
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--subset', choices=['train', 'validation'], default='train')
-    parser.add_argument('--input-dir', type=string, default='.')
-    parser.add_argument('--output-dir', type=string, default='.')
-    args = parser.parse_args()
     with tf.Session() as session:
-        # subset = "train"
-        subset = args.subset
-        input_dir = args.input_dir
-        output_dir = args.output_dir
+        subset = "train"
         maxrecordsperfile = 2048
         N = 0 # Expect 1251 records in 1 file (for training)
 		# Number of records per file...
         mx = 0
-        # directory = "/data/tf/imagenet/records"
-        # directory = "."
-        pattern = os.path.join(input_dir, '%s-*-of-*' % subset)
+        directory = "/data/tensorflow/imagenet/train"
+        pattern = os.path.join(directory, '%s-*-of-*' % subset)
         files = gfile.Glob(pattern)
         if not files:
             raise ValueError()
         files = sorted(files)
-        print "Counting records..."
+        print("Counting records...")
         index = 0
         for filename in files:
             recordsinfile = _count (filename)
@@ -91,8 +80,8 @@ if __name__ == "__main__":
             N += recordsinfile
             index += 1
             if (index % 10 == 0):
-                print "%4d files counted" % (index)
-        print "%d records in %d file%s (max. %d records/file)" % (N, len(files), "s" if len(files) > 1 else "", mx)
+                print("%4d files counted" % (index))
+        print("%d records in %d file%s (max. %d records/file)" % (N, len(files), "s" if len(files) > 1 else "", mx))
         
         queue = tf.train.string_input_producer(files, num_epochs=1)
         reader = tf.TFRecordReader()
@@ -112,7 +101,7 @@ if __name__ == "__main__":
         img_checksums = []
 	    
         filecounter = 1
-        filename = "%s/crossbow-%s.records.%d" % (output_dir, subset, filecounter)
+        filename = "crossbow-%s.records.%d" % (subset, filecounter)
         f = open(filename, "wb")
         # Write number of records as a file header
         recordsinfile = 0
@@ -123,7 +112,7 @@ if __name__ == "__main__":
         header = np.array([recordsinfile], np.int32)
         f.write(header)
         
-        print "Writing records..."
+        print("Writing records...")
         
         totalrecordswritten = 0
         recordswritten = 0
@@ -163,8 +152,8 @@ if __name__ == "__main__":
             length  = 4 + 4 + 4 + (numberofboxes * 16) + 4 + 4 +len(buf)
             lengthd = np.array([length], np.int32)
             
-            if (index < 10):
-                print "Writing record #%07d of length %6d; shape %s" % (index, length, img.shape)
+            if (index % 100 == 0):
+                print("Writing record #%07d of length %10d; label is %4d, image shape is %s" % (index, length, lbl[0], img.shape))
             
             f.write(lengthd)
             f.write(lbl)
@@ -189,7 +178,7 @@ if __name__ == "__main__":
                 remaining = N - totalrecordswritten
                 if remaining > 0:
                     filecounter += 1
-                    filename = "%s/crossbow-%s.records.%d" % (output_dir, subset, filecounter)
+                    filename = "crossbow-%s.records.%d" % (subset, filecounter)
                     f = open(filename, "wb")
                     # Write file header
                     recordsinfile = 0
@@ -205,10 +194,10 @@ if __name__ == "__main__":
             f.close()
             totalrecordswritten += recordswritten
             
-        print "%d/%d records written in %d files" % (totalrecordswritten, N, filecounter)
+        print("%d/%d records written in %d files" % (totalrecordswritten, N, filecounter))
         
-        print "[DBG] %d checksums" % len(img_checksums)
-        print "[DBG] Writing to file..."
+        print("[DBG] %d checksums" % len(img_checksums))
+        print("[DBG] Writing to file...")
         cf = open("%s-data-checksums.txt" % (subset), "w")
         z = zip(lbl_checksums, img_checksums)
         _ndx = 0
@@ -220,4 +209,4 @@ if __name__ == "__main__":
         coord.request_stop()
         coord.join(threads)
         session.close()
-    print "Bye."
+    print("Bye.")
