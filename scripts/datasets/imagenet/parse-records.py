@@ -58,7 +58,13 @@ def _parse(record):
     
     return image, height, width, label, xmin, ymin, xmax, ymax, features['image/class/text']
 
-if __name__ == "__main__":
+if __name__ == "__main__":    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--subset', choices=['train', 'validation'], default='train')
+    parser.add_argument('--input-dir', type=str, default='.')
+    parser.add_argument('--output-dir', type=str, default='.')
+    args = parser.parse_args()
+
     with tf.Session() as session:
         subset = "train"
         maxrecordsperfile = 2048
