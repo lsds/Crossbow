@@ -73,9 +73,9 @@ ENV LD_LIBRARY_PATH $JPEG_HOME/lib:$LD_LIBRARY_PATH
 ENV LD_LIBRARY_PATH $JPEG_HOME:$LD_LIBRARY_PATH
 
 # Crossbow
+ADD . /crossbow
 ENV CROSSBOW_HOME /crossbow
-RUN git clone --progress http://github.com/lsds/Crossbow.git crossbow \
-    && cd crossbow \
+RUN cd crossbow \
     && mvn package \
     && cd clib-multigpu \
     && ./genmakefile.sh \
