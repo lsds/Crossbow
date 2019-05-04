@@ -1882,6 +1882,116 @@ void crossbowExecutionContextExecute (
 	return;
 }
 
+void crossbowExecutionContextExecuteNext (
+	JNIEnv *env,
+	crossbowExecutionContextP ctx,
+	int dataflowId,
+	int taskId,
+	int examplesStartP, int examplesEndP,
+	int   labelsStartP, int   labelsEndP,
+	long *argv,
+	int phase,
+	jobject replica) {
+
+	dbg("Execute task %04d (dataflow %d phase %d): examples <%p [%10d, %10d) free %10ld> labels <%p [%10d, %10d) free %10ld>\n",
+			taskId,
+			dataflowId,
+			phase,
+			NULL, examplesStartP, examplesEndP, argv[0],
+			NULL,   labelsStartP,   labelsEndP, argv[1]);
+
+	if ((examplesStartP == 0) && (labelsStartP == 0)) {
+		/*
+		 * N tasks has been scheduled, and the next N tasks
+		 * are about to be scheduled. Wait until the images
+		 * and labels have been decoded.
+		 *
+		 * However, what if the swap succeeds but one of the
+		 * previous N tasks is still being scheduled?
+		 */
+		crossbowRecordDatasetSwap (ctx->dataset[phase]);
+	}
+
+	void *examplesP = ctx->dataset[phase]->images;
+	void   *labelsP = ctx->dataset[phase]->labels;
+
+	nullPointerException (examplesP);
+	nullPointerException (  labelsP);
+
+	int examplesCapacity = ctx->dataset[phase]->buffer->capacity[0];
+	int   labelsCapacity = ctx->dataset[phase]->buffer->capacity[1];
+
+	crossbowModelP model = crossbowModelManagerGet (env, ctx->modelmanager, replica);
+
+	/* Get device on which the model replica resides */
+	crossbowDeviceP dev = crossbowArrayListGet (ctx->devices, model->dev);
+
+	/* Find next available stream */
+	crossbowStreamP stream = crossbowExecutionContextNextStream (ctx, dev->id);
+
+	/* info("Execute task on device %d stream %d with model replica %2d\n", dev->id, stream->id, model->id); */
+
+	stream->task = taskId;
+	stream->phi  =  phase;
+
+	stream->freeP[0] = argv[0];
+	stream->freeP[1] = argv[1];
+
+	stream->dataflow = (crossbowDataflowP) crossbowArrayListGet (ctx->dataflows, dataflowId);
+
+	stream->model = model;
+
+	if (stream->theModel == NULL)
+		stream->theModel = crossbowArrayListGet (ctx->modelmanager->baseModels, dev->id);
+
+	if (stream->modelSynchronisationHandle == NULL)
+		stream->modelSynchronisationHandle = dev->modelSynchronisationHandle;
+
+	if (stream->modelSynchronisationStream == NULL)
+		stream->modelSynchronisationStream = dev->modelSynchronisationStream;
+
+	checkCudaErrors (cudaSetDevice(dev->id));
+
+	/* Initialise stream input, case __INPUT_ISPINNED_:
+	 *
+	 * Any variable points to the data buffer that holds its data, both on host and on device.
+	 * Since the input variables are pinned, input data has to be copied to the corresponding
+	 * pinned memory region.
+	 *
+	 * else:
+	 *
+	 * Input variables hold a pointer to the input data (e.g. `examplesP`) which must be page
+	 * aligned (since it has been memory-mapped) and registered against CUDA's address space.
+	 *
+	 */
+#ifndef __INPUT_IS_PINNED_
+	if (ctx->datasethandler) {
+		/*
+		 * Pointers to example and label data are already registered, but we have to make sure
+		 * that the data has been copied from the data set files to those buffers.
+		 */
+		crossbowLightWeightDatasetHandlerReady (ctx->datasethandler, phase, crossbowLightWeightDatasetHandlerTranslate (argv[0], examplesEndP - examplesStartP));
+    }
+	crossbowHostRegisterBuffer (0, examplesP, examplesCapacity, examplesStartP, examplesEndP, phase);
+	crossbowHostRegisterBuffer (1, labelsP,   labelsCapacity,   labelsStartP,   labelsEndP,   phase);
+#else
+	(void) examplesCapacity;
+	(void) labelsCapacity
+#endif
+	crossbowVariableSetHostData (stream->examples, examplesP, examplesStartP, examplesEndP);
+	crossbowVariableSetHostData (stream->labels,   labelsP,   labelsStartP,   labelsEndP  );
+
+#ifndef USE_TASKHANDLERS
+	crossbowStreamExecute (ctx, stream);
+#else
+	crossbowArrayListP pool = crossbowArrayListGet(ctx->taskhandlers, (model->dev < 4) ? 0 : 1);
+	crossbowTaskHandlerP taskhandler = crossbowArrayListGetNext (pool);
+	dbg("Assign task %04d to task handler #%lu\n", stream->task, taskhandler->id);
+	crossbowTaskHandlerPublish (taskhandler, stream);
+#endif
+	return;
+}
+
 void crossbowExecutionContextSchedule (
 	JNIEnv *env,
 	crossbowExecutionContextP ctx,

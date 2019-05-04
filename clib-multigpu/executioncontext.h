@@ -261,6 +261,17 @@ void crossbowExecutionContextExecute (
 	int,
 	jobject);
 
+void crossbowExecutionContextExecuteNext (
+	JNIEnv *,
+	crossbowExecutionContextP,
+	int,
+	int,
+	int, int,
+	int, int,
+	long *,
+	int,
+	jobject);
+
 void crossbowExecutionContextSchedule (
 	JNIEnv *,
 	crossbowExecutionContextP,

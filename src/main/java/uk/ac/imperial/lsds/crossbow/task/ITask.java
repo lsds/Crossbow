@@ -10,6 +10,8 @@ public interface ITask {
 
 	public boolean isValidationTask ();
 	
+	public boolean usesRecordDataset ();
+	
 	public Phase getPhase ();
 
 	public boolean isGPUTask ();

@@ -18,6 +18,8 @@ public abstract class AbstractTask implements ITask {
 	
 	protected boolean validate = false;
 	
+	protected boolean usesRecords = false;
+	
 	public int lowerBound;
 	
 	public ModelAccess access;
@@ -42,6 +44,14 @@ public abstract class AbstractTask implements ITask {
 	
 	public boolean isValidationTask () {
 		return validate;
+	}
+	
+	public void setRecordDatasetUse (boolean useRecords) {
+		this.usesRecords = useRecords;
+	}
+	
+	public boolean usesRecordDataset () {
+		return usesRecords;
 	}
 	
 	public Phase getPhase () {

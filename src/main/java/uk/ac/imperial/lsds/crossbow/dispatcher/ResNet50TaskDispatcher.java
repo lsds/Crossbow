@@ -4,12 +4,19 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import uk.ac.imperial.lsds.crossbow.Batch;
+import uk.ac.imperial.lsds.crossbow.BatchFactory;
 import uk.ac.imperial.lsds.crossbow.Dataflow;
 import uk.ac.imperial.lsds.crossbow.ModelConf;
 import uk.ac.imperial.lsds.crossbow.RecordDataset;
 import uk.ac.imperial.lsds.crossbow.SubGraph;
+import uk.ac.imperial.lsds.crossbow.SystemConf;
+import uk.ac.imperial.lsds.crossbow.data.MappedDataBuffer;
 import uk.ac.imperial.lsds.crossbow.data.VirtualCircularDataBuffer;
 import uk.ac.imperial.lsds.crossbow.device.TheGPU;
+import uk.ac.imperial.lsds.crossbow.result.IResultHandler;
+import uk.ac.imperial.lsds.crossbow.task.Task;
+import uk.ac.imperial.lsds.crossbow.task.TaskFactory;
+import uk.ac.imperial.lsds.crossbow.task.TaskQueue;
 import uk.ac.imperial.lsds.crossbow.types.DatasetType;
 import uk.ac.imperial.lsds.crossbow.types.Phase;
 
@@ -20,6 +27,9 @@ public class ResNet50TaskDispatcher implements ITaskDispatcher {
 	private Dataflow dataflow;
 	
 	private SubGraph graph;
+	private TaskQueue queue;
+	
+	private IResultHandler handler;
 	
 	private Phase phase;
 	private boolean test;
@@ -29,6 +39,8 @@ public class ResNet50TaskDispatcher implements ITaskDispatcher {
 	private RecordDataset dataset;
 	
 	private VirtualCircularDataBuffer [] circularBuffer;
+	
+	private MappedDataBuffer [] buffer;
 	
 	private int [] tasksize;
 	
@@ -46,11 +58,16 @@ public class ResNet50TaskDispatcher implements ITaskDispatcher {
 	
 	private boolean first = true;
 	
+	private boolean scheduleDirectly;
+	
 	public ResNet50TaskDispatcher (Dataflow df) {
 		
 		dataflow = df;
 		
 		graph = dataflow.getSubGraph();
+		queue = dataflow.getExecutionContext().getExecutorQueue();
+		
+		handler = dataflow.getResultHandler();
 		
 		phase = dataflow.getPhase();
 		test = dataflow.isTest();
@@ -61,6 +78,10 @@ public class ResNet50TaskDispatcher implements ITaskDispatcher {
 		dataset = (RecordDataset) ModelConf.getInstance ().getDataset (phase);
 		
 		circularBuffer = new VirtualCircularDataBuffer [2];
+		
+		buffer = new MappedDataBuffer [2];
+		/* For record data sets, set to null */
+		buffer[0] = buffer[1] = null;
 		
 		tasksize = ModelConf.getInstance().getTaskSize ();
 		
@@ -86,6 +107,9 @@ public class ResNet50TaskDispatcher implements ITaskDispatcher {
 		_q = new long [2];
 		
 		idx = new long [2];
+		
+		/* Does the dispatcher skip the task queue? */
+		scheduleDirectly = SystemConf.getInstance().useDirectScheduling();
 	}
 	
 	public void dispatchNext (int taskid, int bound) {
@@ -125,6 +149,9 @@ public class ResNet50TaskDispatcher implements ITaskDispatcher {
 		
 	private void newTaskFor (int taskid, int bound) {
 		
+		Task task;
+		Batch batch;
+		
 		for (int i = 0; i < 2; i++) {
 			_p[i] = p[i] % circularBuffer[i].capacity();
 			_q[i] = q[i] % circularBuffer[i].capacity();
@@ -151,9 +178,20 @@ public class ResNet50TaskDispatcher implements ITaskDispatcher {
 			System.exit(1);
 		}
 		
-		/* Launch task directly */
-		TheGPU.getInstance().scheduleNext(graph.getId(), taskid, _p[0], _q[0], _p[1], _q[1], f, (test ? 1 : 0), bound);
-		
+		if (scheduleDirectly) {
+			
+			/* Launch task directly */
+			TheGPU.getInstance().scheduleNext(graph.getId(), taskid, _p[0], _q[0], _p[1], _q[1], f, (test ? 1 : 0), bound);
+			
+		} else {
+			
+			batch = BatchFactory.newInstance (taskid, bound, buffer, tasksize, _p, _q, f, dataflow.totalNumberOfOperators());
+			
+			task = TaskFactory.newInstance (taskid, graph, batch, handler, null);
+			task.setValidationTask(test);
+			
+			queue.add(task);
+		}
 	}
 	
 	public void dispatch (Batch batch, Integer replicaId) {

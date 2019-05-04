@@ -164,7 +164,11 @@ public class TheGPU {
 		
 		int phase = (task.isValidationTask()) ? Phase.CHECK.getId() : Phase.TRAIN.getId();
 		
-		execute (dataflowId, batch.getId(), examples, from[0], to[0], labels, from[1], to[1], free, phase, replicaId);
+		if (! task.usesRecordDataset()) {
+			execute (dataflowId, batch.getId(), examples, from[0], to[0], labels, from[1], to[1], free, phase, replicaId);
+		} else {
+			executeNext (dataflowId, batch.getId(), from[0], to[0], from[1], to[1], free, phase, replicaId);
+		}
 	}
 	
 	private native int init (int [] devices, int streams, int callbackhandlers, int taskhandlers, int callbackhandlercoreoffset, int taskhandlercoreoffset);
@@ -300,6 +304,15 @@ public class TheGPU {
 			int taskId,
 			IDataBuffer A, int startA, int endA, 
 			IDataBuffer B, int startB, int endB, 
+			long [] free,
+			int phase, 
+			Integer replicaId);
+	
+	private native int executeNext (
+			int dataflowId,
+			int taskId,
+			int startA, int endA, 
+			int startB, int endB, 
 			long [] free,
 			int phase, 
 			Integer replicaId);
