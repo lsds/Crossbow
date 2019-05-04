@@ -16,3 +16,5 @@ checkpoints
 .DS_Store
 /target/
 /bin/
+clib-multigpu/Makefile.save
+clib-multigpu/Makefile
