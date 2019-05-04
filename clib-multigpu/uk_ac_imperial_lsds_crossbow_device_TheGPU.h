@@ -474,10 +474,10 @@ JNIEXPORT jint JNICALL Java_uk_ac_imperial_lsds_crossbow_device_TheGPU_setLearni
 /*
  * Class:     uk_ac_imperial_lsds_crossbow_device_TheGPU
  * Method:    setLearningRateDecayPolicyMultiStep
- * Signature: (FD[I)I
+ * Signature: (FDI[I)I
  */
 JNIEXPORT jint JNICALL Java_uk_ac_imperial_lsds_crossbow_device_TheGPU_setLearningRateDecayPolicyMultiStep
-  (JNIEnv *, jobject, jfloat, jdouble, jintArray);
+  (JNIEnv *, jobject, jfloat, jdouble, jint, jintArray);
 
 /*
  * Class:     uk_ac_imperial_lsds_crossbow_device_TheGPU

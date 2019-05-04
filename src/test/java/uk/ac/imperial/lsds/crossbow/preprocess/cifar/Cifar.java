@@ -30,8 +30,8 @@ public class Cifar {
 		
 		Options options = new Options (Cifar.class.getName());
 		
-		options.addOption ("-i", "Input data directory",  File.class,    "/mnt/nfs/users/piwatcha/16-crossbow/data/cifar-10/original");
-		options.addOption ("-o", "Output data directory", File.class,    String.format("/mnt/nfs/users/piwatcha/16-crossbow/data/cifar-10/pre-processed-and-normalised/b-%03d", batchSize));
+		options.addOption ("-i", "Input data directory",  File.class,    null);
+		options.addOption ("-o", "Output data directory", File.class,    null);
 		options.addOption ("-b", "Micro-batch size",      Integer.class, Integer.toString(batchSize));
 		options.addOption ("-p", "Padding",               Integer.class, Integer.toString(padding));
 		

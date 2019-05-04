@@ -389,6 +389,10 @@ public class ModelConf {
 				System.exit(1);
 			}
 		}
+		else if (arg.equals("--warmup-steps")) {
+
+			solverConf.setWarmupSteps (opt.getIntValue ());
+		}
 		else if (arg.equals("--alpha")) {
 			
 			solverConf.setAlpha (opt.getFloatValue ());

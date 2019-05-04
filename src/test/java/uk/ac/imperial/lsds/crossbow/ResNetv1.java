@@ -881,7 +881,7 @@ public class ResNetv1 {
 		options.addOption ("--target-loss",   	"Target loss",            false,   Float.class,      "0.0");
 		
 		options.addOption ("--dataset-name",   	"Dataset name",           true,   String.class, "imagenet");
-		options.addOption ("--layers",   		"Number of layers",       true,  Integer.class,       "50");
+		options.addOption ("--layers",          "Number of layers",       true,  Integer.class,       "50");
 		options.addOption ("--data-directory",  "Data directory",         true,   String.class, "/data/crossbow/imagenet/ilsvrc2012/records/");
 		
 		/* Override batch-normalisation hyper-parameters */
@@ -967,6 +967,8 @@ public class ResNetv1 {
 				
 		if (datasetName.equals("imagenet")) {
 			
+			System.out.println("Load imagenet data set");
+			
 			int numclasses = 1000; 
 			
 			/* Create dataset */
@@ -976,8 +978,19 @@ public class ResNetv1 {
 			// dataset [0] = new LightWeightDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-train.metadata", true));
 			// dataset [1] = new LightWeightDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-test.metadata",  true));
 			
-			dataset [0] = new RecordDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-train.metadata", true));
-			dataset [1] = new RecordDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-test.metadata",  true));
+			dataset [0] = new RecordDataset (
+				DatasetUtils.buildPath(
+					"/fast/crossbow/imagenet/train", 
+					"imagenet-train.metadata", true
+				)
+			);
+			
+			dataset [1] = new RecordDataset (
+				DatasetUtils.buildPath(
+					"/fast/crossbow/imagenet/validation", 
+					"imagenet-test.metadata", true
+				)
+			);
 			
 			int [] features = new int [] { 64, 128, 256, 512 }; /* 4 stages */
 			

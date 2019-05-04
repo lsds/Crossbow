@@ -2,6 +2,8 @@
 
 USAGE="usage: [TBD]"
 
+
+
 crossbowFileExists () {
 	filename=$1 
 	if [ ! -f ${filename} ]; then
@@ -43,6 +45,11 @@ if [ -z $CROSSBOW_HOME ]; then
     exit 1
 fi
 
+# Enable GPU utilisation measurements
+MEASUREMENTS=1
+MEASUREMENTSCRIPT="$CROSSBOW_HOME/tools/measurements/gpu-measurements.sh"
+MEASUREMENTSCRIPTPID=
+
 CROSSBOW="${CROSSBOW_HOME}/target/crossbow-0.0.1-SNAPSHOT.jar"
 TESTS="${CROSSBOW_HOME}/target/test-classes"
 
@@ -68,7 +75,7 @@ crossbowDirExists ${resultdir}
 layers=32
 dataset="cifar-10"
 
-numgpus=1
+numgpus=2
 devices="0"
 
 momentum="0.9"
@@ -79,12 +86,21 @@ learningratestepunit="epochs"
 learningrategamma="0.1"
 decay="0.0001"
 
-batchsize=64
+batchsize=512
 
-epochs=140
+epochs=1
 
+# Choose a synchronisation strategy
+#
+# updatemodel="DEFAULT"
 # updatemodel="WORKER"
-updatemodel="SYNCHRONOUSEAMSGD"
+# updatemodel="EAMSGD"
+# updatemodel="SYNCHRONOUSEAMSGD"
+# updatemodel="DOWNPOUR"
+# updatemodel="HOGWILD"
+# updatemodel="POLYAK-RUPPERT"
+updatemodel="SMA"
+
 alpha="0.1"
 
 numreplicas=1
@@ -92,7 +108,7 @@ wpcscale=1
 
 # End of configuration
 
-datadirectory=`printf "/mnt/nfs/users/piwatcha/16-crossbow/data/cifar-10/pre-processed/b-%03d" $batchsize`
+datadirectory=`printf "$CROSSBOW_HOME/data/cifar-10/b-%03d" $batchsize`
     
 devices=`crossbowCreateDeviceList ${numgpus}`
     
@@ -111,6 +127,18 @@ resultfile="resnet-32.out"
 	
 datadirectory=`printf "$CROSSBOW_HOME/data/cifar-10/b-%03d" $batchsize`
 
+if [ $MEASUREMENTS -gt 0 ]; then
+    if [ ! -x $MEASUREMENTSCRIPT ]; then
+        echo "error: invalid script: $MEASUREMENTSCRIPT"
+        exit 1
+    fi
+    # Let's generate an appropriate filename
+    # to store measurements
+    $MEASUREMENTSCRIPT "resnet-32-b-${batchsize}-g-${numgpus}-m-${numreplicas}" &
+    # Get background process id
+    MEASUREMENTSCRIPTPID=$!
+fi
+
 java $OPTS -cp $JCP $CLASS \
     --data-directory ${datadirectory} \
     --display-interval 1000 \
@@ -125,7 +153,7 @@ java $OPTS -cp $JCP $CLASS \
     --number-of-gpu-models ${numreplicas} \
     --number-of-gpu-streams ${numreplicas} \
     --training-unit "epochs" --N ${epochs} \
-    --test-interval-unit "epochs" --test-interval 2 \
+    --test-interval-unit "epochs" --test-interval 1 \
     --queue-measurements true \
     --tee-measurements true \
     --batch-size ${batchsize} \
@@ -140,10 +168,17 @@ java $OPTS -cp $JCP $CLASS \
     --alpha ${alpha} \
     --dataset-name ${dataset} \
     --layers ${layers} \
-    --task-queue-size 64 \
-    --direct-scheduling true
-    # Do not redirect output to a file by default
-    # &> ${resultdir}/${resultfile}
+    --task-queue-size 128 \
+    --direct-scheduling true \
+    &> ${resultdir}/${resultfile}
+
+if [ $MEASUREMENTS -gt 0 ]; then
+    # Stop GPU measurements script
+    echo "Stop GPU measurements"
+    if [ -n $MEASUREMENTSCRIPTPID ]; then
+        kill -15 $MEASUREMENTSCRIPTPID >/dev/null 2>&1
+    fi
+fi
 
 echo "Done"
 

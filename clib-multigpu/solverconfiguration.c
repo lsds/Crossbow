@@ -27,6 +27,8 @@ crossbowSolverConfP crossbowSolverConfCreate () {
 	p->steps = NULL;
 	p->step = 0;
 
+	p->warmuptasks = 0;
+
 	p->irregular = 0;
 
 	p->momentum = 0;
@@ -72,6 +74,8 @@ crossbowSolverConfP crossbowSolverConfReplicate (crossbowSolverConfP conf) {
 		p->steps = NULL;
 	}
 	p->step = conf->step;
+
+	p->warmuptasks = conf->warmuptasks;
 
 	p->irregular = conf->irregular;
 
@@ -124,14 +128,26 @@ float crossbowSolverConfGetLearningRate (crossbowSolverConfP p, int task) {
 	case MULTISTEP:
 		if ((p->step < p->numberofsteps) && ((task + 1) >= p->steps[p->step])) {
 			p->step ++;
-			//if (task >= 62560) {
-			//	p->gamma = 0.1;
 			info("Changing learning rate to %.10f\n", p->learningRate * (float) (pow (p->gamma, p->step)));
-			//}
-            /* Signal copy of base model(s) to replicas */
+			/* Signal copy of base model(s) to replicas */
 			p->_copy = 1;
 		}
 		rate = p->learningRate * (float) (pow (p->gamma, p->step));
+		break;
+	case LSR:
+		invalidConditionException(p->warmuptasks > 0);
+		if (task < p->warmuptasks) {
+			rate = (p->learningRate * ((float) task)) / ((float) p->warmuptasks);
+		} else {
+			/* Fallback to multi-step strategy (piecewise-constant) */
+			if ((p->step < p->numberofsteps) && ((task + 1) >= p->steps[p->step])) {
+				p->step ++;
+				info("Changing learning rate to %.10f\n", p->learningRate * (float) (pow (p->gamma, p->step)));
+				/* Signal copy of base model(s) to replicas */
+				p->_copy = 1;
+			}
+			rate = p->learningRate * (float) (pow (p->gamma, p->step));
+		}
 		break;
 	case EXP:
 		rate = p->learningRate * (float) (pow (p->gamma, (task + 1)));

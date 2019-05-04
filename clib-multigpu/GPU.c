@@ -774,7 +774,7 @@ JNIEXPORT jint JNICALL Java_uk_ac_imperial_lsds_crossbow_device_TheGPU_setLearni
 }
 
 JNIEXPORT jint JNICALL Java_uk_ac_imperial_lsds_crossbow_device_TheGPU_setLearningRateDecayPolicyMultiStep
-	(JNIEnv *env, jobject obj, jfloat learningRate, jdouble gamma, jintArray steps) {
+	(JNIEnv *env, jobject obj, jfloat learningRate, jdouble gamma, jint warmuptasks, jintArray steps) {
 
 	(void) env;
 	(void) obj;
@@ -782,7 +782,7 @@ JNIEXPORT jint JNICALL Java_uk_ac_imperial_lsds_crossbow_device_TheGPU_setLearni
 	jsize argc = (*env)->GetArrayLength(env, steps);
 	jint *argv = (*env)->GetIntArrayElements(env, steps, 0);
 
-	crossbowExecutionContextSetLearningRateDecayPolicyMultiStep (theGPU, learningRate, gamma, argc, argv);
+	crossbowExecutionContextSetLearningRateDecayPolicyMultiStep (theGPU, learningRate, gamma, warmuptasks, argc, argv);
 
 	(*env)->ReleaseIntArrayElements (env, steps, argv, JNI_ABORT);
 

@@ -12,22 +12,33 @@
 
 #include "../timer.h"
 
+#include "yarng.h"
+
 #define USAGE "./testrecordreader [-d directory] [-s subset] [-n files] [-v level]"
 
 /*
  * Perform the kind of pre-processing for test images
+ * that TensorFlow does in benchmarks/:
+ *
+ * https://github.com/alexandroskoliousis/benchmarks/blob/27b2ec139c86b39ab596321afe08878b36a5adfd/scripts/tf_cnn_benchmarks/preprocessing.py#L198
  */
 static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
-
+	
+	/* Cast image to 32-bit float */
 	crossbowImageCast (record->image);
-
-	/* Resize image */
-
+	
+	/* Get image height and width (and convert to floats) */
 	float h = (float) crossbowImageInputHeight (record->image);
 	float w = (float) crossbowImageInputWidth  (record->image);
-
-	float factor = 1.15;
-
+	
+	/* In ResNet, images are cropped to 256 x 256 and the final image size is 224 x 224.
+	 * It is:
+	 * 
+	 * floor(224 x 1.45) ~= 256
+	 */
+	float factor = 1.145;
+	
+	/* Maintain aspect ratio */
 	float ratio = max(224. / h, 224. / w);
 
 	int resizeheight = (int) (h * ratio * factor);
@@ -35,33 +46,39 @@ static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
 	
 	if (verbose > 0)
 		printf("Resized image to (%d x %d)\n", resizeheight, resizewidth);
-
+	
+	/* Resize the image to shape using the bilinear method (do not align corners) */
 	crossbowImageResize (record->image, resizeheight, resizewidth);
 	
 	if (verbose > 0)
 		printf("Checksum of resized image is %.4f\n", crossbowImageChecksum (record->image));
-
-	/* Crop image */
-
-	int top  = (resizeheight - 224) / 2;
-	int left = (resizewidth  - 224) / 2;
-
+	
+	/* Crop image to size (224, 224) */
+	int top  = floor((float) (resizeheight - 224) / 2.); /* x // y */
+	int left = floor((float) (resizewidth  - 224) / 2.);
+	
 	crossbowImageCrop (record->image, 224, 224, top, left);
 	
 	if (verbose > 0)
 		printf("Checksum of cropped image is %.4f\n", crossbowImageChecksum (record->image));
+	
 	return;
 }
 
 /*
  * Perform the kind of pre-processing for training images
+ * that TensorFlow does in benchmarks/:
+ *
+ * https://github.com/alexandroskoliousis/benchmarks/blob/27b2ec139c86b39ab596321afe08878b36a5adfd/scripts/tf_cnn_benchmarks/preprocessing.py#L286
  */
-static void preprocessTrainingRecord (crossbowRecordP record) {
+static void preprocessTrainingRecord (crossbowRecordP record, int verbose) {
 
+	/* Cast image to 32-bit float */
 	crossbowImageCast (record->image);
 
 	/*
-	 * Sample bounding box:
+	 * Sample bounding box. If not box is supplied,
+	 * assume the bounding box is the entire image.
 	 *
 	 * Minimum coverage is 0.1
 	 * Aspect ratio range is [0.75, 1.33]
@@ -72,8 +89,11 @@ static void preprocessTrainingRecord (crossbowRecordP record) {
 	int width  = 0;
 	int top    = 0;
 	int left   = 0;
+
 	float ratio [2] = {0.75, 1.33};
 	float area  [2] = {0.05, 1.00};
+	
+	dbg("Sample bounding box\n");
 	crossbowImageSampleDistortedBoundingBox (
 		record->image, 
 		record->boxes, 
@@ -83,25 +103,20 @@ static void preprocessTrainingRecord (crossbowRecordP record) {
 		100, 
 		&height, &width, &top, &left);
 
-	/* Crop image */
+	/* Crop image to the specified bounding box */
 	crossbowImageCrop (record->image, height, width, top, left);
 
 	/* Flip image */
+	dbg("Flip image\n");
 	crossbowImageRandomFlipLeftRight (record->image);
 
-	/* Resize image */
+	/* Resize image to shape (224, 224) with the bilinear method (don't align corners) */
+	dbg("Crop image to (224 x 224)\n");
 	crossbowImageResize (record->image, 224, 224);
-
-	/* Distort image colours */
-	crossbowImageMultiply (record->image, (1. / 255.));
-
-	crossbowImageRandomBrightness (record->image, (32. / 255.));
-	crossbowImageRandomContrast   (record->image, 0.5, 1.5);
-	/* Lower saturation is 0.5, upper saturation is 1.5, max. delta hue is (0.2 x pi) */
-	crossbowImageRandomHSVInYIQ   (record->image, 0.5, 1.5, 0.2 * 3.14);
-
-	/* Clip by value */
-	crossbowImageClipByValue (record->image, 0.0, 1.0);
+	
+	if (verbose > 0)
+		printf("Checksum of traning image is %.4f\n", crossbowImageChecksum (record->image));
+	
 }
 
 int main (int argc, char *argv[]) {
@@ -110,8 +125,9 @@ int main (int argc, char *argv[]) {
 	int i, j;
 	/* Default input arguments */
 	unsigned verbose = 0;
-	char *directory = "/mnt/nfs/users/piwatcha/my-tensorflow/data/imagenet/crossbow";
+	char *directory = "examples";
 	char *subset = "train";
+	char *type = "test";
 	int files = 1;
 	for (i = 1; i < argc;) {
 		if ((j = i + 1) == argc) {
@@ -131,6 +147,13 @@ int main (int argc, char *argv[]) {
 		if (strcmp(argv[i], "-n") == 0) {
 			files = atoi(argv[j]);
 		} else
+		if (strcmp(argv[i], "-t") == 0) {
+			if ((strcmp (argv[j], "train") != 0) && (strcmp (argv[j], "test") != 0)) {
+				fprintf(stderr, "error: invalid type '%s'. Try 'train' or 'test'\n", argv[j]);
+				exit(1);
+			}
+			type = argv[j];
+		} else
 		if (strcmp(argv[i], "-v") == 0) {
 			verbose = (unsigned) atoi(argv[j]);
 		} else {
@@ -141,6 +164,8 @@ int main (int argc, char *argv[]) {
 	
 	/* Initialise memory manager */
 	crossbowMemoryManagerInit ();
+	
+	crossbowYarngInit(123456789);
 	
 	crossbowRecordReaderP reader = crossbowRecordReaderCreate (1); /* 1 worker */
 	
@@ -158,29 +183,34 @@ int main (int argc, char *argv[]) {
 	crossbowRecordReaderRepeat (reader, 1);
 	crossbowRecordReaderFinalise (reader);
 	
-    crossbowTimerP timer = crossbowTimerCreate ();
-    crossbowTimerStart (timer);
+	crossbowTimerP timer = crossbowTimerCreate ();
+	crossbowTimerStart (timer);
 	int count = 0;
 	/* Iterate over dataset */
-	while (crossbowRecordReaderHasNext(reader)) {
+	while (crossbowRecordReaderHasNext(reader) && (count < 10)) {
 		crossbowRecordP record = crossbowRecordCreate ();
 		crossbowRecordReaderNext (reader, record);
 		if (verbose > 1) {
-            char *s = crossbowRecordString(record);
-		    printf("%s\n", s);
-		    crossbowStringFree (s);
-		    /* crossbowImageDump (record->image, 5); */
+			char *s = crossbowRecordString(record);
+			printf("%s\n", s);
+			crossbowStringFree (s);
+			/* crossbowImageDump (record->image, 5); */
 		}
-        preprocessTestRecord (record, verbose);
-        crossbowRecordFree (record);
+		if (strcmp (type, "train") == 0)
+			preprocessTrainingRecord (record, verbose);
+		else {
+			preprocessTestRecord (record, verbose);
+		}
+		crossbowRecordFree (record);
 		count ++;
 	}
-    tstamp_t dt = crossbowTimerElapsedTime (timer);
-    printf("%d images processed\n", count);
-    printf("%llu usecs\n", dt);
-    crossbowTimerFree (timer);
+	tstamp_t dt = crossbowTimerElapsedTime (timer);
+	printf("%d images processed\n", count);
+	printf("%llu usecs\n", dt);
+	crossbowTimerFree (timer);
 	crossbowRecordReaderFree (reader);
 	crossbowMemoryManagerDump ();
 	printf("Bye.\n");
 	return 0;
 }
+

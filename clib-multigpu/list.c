@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "debug.h"
 
+#include <time.h>
+
 /* Return node to free list */
 static void putNode (crossbowListP list, crossbowListNodeP p) {
    p->item = NULL;
@@ -137,6 +139,41 @@ void *crossbowListRemoveFirst (crossbowListP p) {
 		p->tail = NULL;
 	/* crossbowFree (node, sizeof(crossbow_list_node_t)); */
 	return item;
+}
+
+void crossbowListShuffle (crossbowListP p) {
+	int i, j;
+	void **array;
+	void *t;
+	int n;
+	nullPointerException(p);
+	if (crossbowListEmpty(p))
+		return;
+	n = crossbowListSize(p);
+	if (n == 1)
+		return;
+	/* Convert list to array */
+	array = crossbowMalloc (n * sizeof(void *));
+	i = 0;
+	while (! crossbowListEmpty(p)) {
+		void *item = crossbowListRemoveFirst (p);
+		array[i++] = item;
+	}
+	/* Shuffle array */
+	srand(time(NULL));
+	for (i = n - 1; i > 0; --i) {
+		j = rand() % (i + 1);
+		/* Swap item at position i with item at position j */
+		t = array[i];
+		array[i] = array[j];
+		array[j] = t;
+	}
+	/* Re-populate the list */
+	for (i = 0; i < n; ++i)
+		crossbowListAppend(p, array[i]);
+	/* Free temporal array */
+	crossbowFree (array, (n * sizeof(void *)));
+	return;
 }
 
 void crossbowListIteratorReset (crossbowListP p) {

@@ -70,7 +70,8 @@ public class RecordDataset implements IDataset {
 		capacity [0] = SystemConf.getInstance().getTaskQueueSizeLimit() * (meta.getExampleSize () * meta.getBatchSize () + meta.getExamplesFilePad ());
 		capacity [1] = SystemConf.getInstance().getTaskQueueSizeLimit() * (meta.getLabelSize   () * meta.getBatchSize () + meta.getLabelsFilePad   ());
 		
-		log.info(">>>>>>>>> Initialise dataset... " + SystemConf.getInstance().getCoreMapper().getOffset(HandlerType.DATASET));
+		log.info("Initialise record dataset. Expected core offset is " + 
+			SystemConf.getInstance().getCoreMapper().getOffset(HandlerType.DATASET));
 		TheGPU.getInstance().recordDatasetInit (
 				phase.getId(), 
 				SystemConf.getInstance().numberOfFileHandlers(),

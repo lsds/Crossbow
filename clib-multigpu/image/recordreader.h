@@ -8,6 +8,7 @@
 
 typedef struct crossbow_record_reader *crossbowRecordReaderP;
 typedef struct crossbow_record_reader {
+	unsigned shuffle;
     crossbowListP dataset;
     int records; /* Total number of records in dataset */
     int counter; /* Current record counter */
@@ -21,6 +22,8 @@ typedef struct crossbow_record_reader {
 
 typedef struct crossbow_record_reader_task *crossbowRecordReaderTaskP;
 typedef struct crossbow_record_reader_task {
+	/* Distinguish between pre-processing training and validation images */
+	unsigned training;
     /* Worker id */
     int id;
     int jc;
@@ -49,9 +52,9 @@ void crossbowRecordReaderNext (crossbowRecordReaderP, crossbowRecordP);
 
 crossbowRecordFileP crossbowRecordReaderNextPointer (crossbowRecordReaderP, int *);
 
-void crossbowRecordReaderRead (crossbowRecordReaderP, int, int, void *, int);
+void crossbowRecordReaderRead (crossbowRecordReaderP, unsigned, int, int, void *, int);
 
-void crossbowRecordReaderReadProperly (crossbowRecordReaderP, int, int *, int, int *, void *, void *, int *);
+void crossbowRecordReaderReadProperly (crossbowRecordReaderP, unsigned, int, int *, int, int *, void *, void *, int *);
 
 void crossbowRecordReaderFree (crossbowRecordReaderP);
 
