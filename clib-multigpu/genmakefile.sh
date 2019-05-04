@@ -108,8 +108,8 @@ endif
 CC := cc
 NV := \$(CUDA_PATH)/bin/nvcc -ccbin \$(CC)
 
-# So far, used for libRNG
-CPP := g++
+# So far, used for libRNG. Also yarng.c requires C++11
+CPP := g++ -std=c++11
 
 #
 # Optional
@@ -230,8 +230,8 @@ uk_ac_imperial_lsds_crossbow_device_ObjectRef.h:
 libCPU.so: CPU.o
 	\$(NV) \$(LFL) -shared -o libCPU.so CPU.o \$(LIBS)
 	
-libGPU.so: GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/random.o random/generator.o \$(OBJS) \$(KNLS)
-	\$(NV) \$(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/random.o random/generator.o \$(OBJS) \$(KNLS) \$(LIBS)
+libGPU.so: GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/generator.o \$(OBJS) \$(KNLS)
+	\$(NV) \$(LFL) -shared -o libGPU.so GPU.o image/recordreader.o image/recordfile.o image/record.o image/image.o image/boundingbox.o image/rectangle.o image/yarng.o random/generator.o \$(OBJS) \$(KNLS) \$(LIBS)
 	
 libBLAS.so: BLAS.o \$(OBJS) \$(KNLS)
 	\$(NV) \$(LFL) -shared -o libBLAS.so BLAS.o \$(OBJS) \$(KNLS) \$(LIBS)
@@ -660,9 +660,9 @@ kernels/sleep.o: kernels/sleep.cu kernels/sleep.h
 # === [End of kernel compilation] ===
 	
 test: image/testrecordreader.c image/testbatchreader.c testrecorddataset.c
-	\$(NV) \$(INCLUDES) \$(LFL) image/testrecordreader.c -o image/testrecordreader -L\$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords \$(LIBS)
-	\$(NV) \$(INCLUDES) \$(LFL) image/testbatchreader.c  -o image/testbatchreader  -L\$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords \$(LIBS)
-	\$(NV) \$(INCLUDES) \$(LFL) testrecorddataset.c  -o testrecorddataset  -L\$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords \$(LIBS)
+	\$(NV) \$(INCLUDES) \$(LFL) image/testrecordreader.c -o image/testrecordreader -L\$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords -lm \$(LIBS)
+	\$(NV) \$(INCLUDES) \$(LFL) image/testbatchreader.c -o image/testbatchreader -L\$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords -lm \$(LIBS)
+	\$(NV) \$(INCLUDES) \$(LFL) testrecorddataset.c -o testrecorddataset -L\$(CBOW_PATH)/clib-multigpu -lGPU -lCPU -lBLAS -lRNG -lrecords -lm \$(LIBS)
 	
 clean:
 	rm -f *.o *.so

@@ -802,12 +802,14 @@ static unsigned crossbowImageGenerateRandomCrop (crossbowRectangleP p, int width
 	if (maxHeight > height)
 		maxHeight = height;
 	
-	if (minHeight > maxHeight)
+	if (minHeight >= maxHeight)
 		minHeight = maxHeight;
 	
-	if (minHeight < maxHeight)
+	if (minHeight < maxHeight) {
 		/* Generate a random number of the closed range [0, (maxHeight - minHeight)] */
-		minHeight += crossbowYarngNext (0, maxHeight - minHeight + 1);
+		/* minHeight += crossbowYarngNext (0, maxHeight - minHeight + 1); */
+		minHeight += crossbowYarngNext (0, maxHeight - minHeight);
+	}
 	
 	int minWidth = (int) lrintf (minHeight * ratio);
 	/* Check that width is less or equal to the original width */

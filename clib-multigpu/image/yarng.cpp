@@ -15,6 +15,7 @@ void crossbowYarngInit (unsigned int seed) {
 	if (initialised)
 		return;
 	generator = new CrossbowRandomGenerator (seed);
+	initialised = 1;
 }
 
 float crossbowYarngNext (float start, float end) {
