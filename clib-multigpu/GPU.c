@@ -1016,12 +1016,12 @@ JNIEXPORT jint JNICALL Java_uk_ac_imperial_lsds_crossbow_device_TheGPU_executeNe
 	jobject replica) {
 
 	(void) obj;
-
+	
 	/* Get free pointers (int free [2]) */
 	jsize  argc = (*env)->GetArrayLength(env, freeP);
 	jlong *argv = (*env)->GetLongArrayElements(env, freeP, 0);
 	invalidArgumentException (argc == 2);
-
+	
 	crossbowExecutionContextExecuteNext (
 			env,
 			theGPU,

@@ -189,6 +189,7 @@ public class ResNet50TaskDispatcher implements ITaskDispatcher {
 			
 			task = TaskFactory.newInstance (taskid, graph, batch, handler, null);
 			task.setValidationTask(test);
+			task.setRecordDatasetUse(true);
 			
 			queue.add(task);
 		}

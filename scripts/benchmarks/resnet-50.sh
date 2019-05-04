@@ -86,8 +86,9 @@ batchsize=16
 epochs=90
 
 # updatemodel="DEFAULT"
-updatemodel="WORKER"
+# updatemodel="WORKER"
 # updatemodel="SYNCHRONOUSEAMSGD"
+updatemodel="SMA"
 alpha="0.1"
 
 numreplicas=2
@@ -140,9 +141,9 @@ NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --dataset-name ${dataset} \
     --layers ${layers} \
     --reuse-memory true \
-    # --data-directory ${datadir} \
-    # Do not redirect output for a file by default
-    # &> ${resultdir}/${resultfile}
+    --direct-scheduling false \
+    --data-directory ${datadir} \
+    &> ${resultdir}/${resultfile}
 
 echo "Done"
 

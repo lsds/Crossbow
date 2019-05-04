@@ -974,23 +974,13 @@ public class ResNetv1 {
 			/* Create dataset */
 			
 			String dataDirectory = options.getOption("--data-directory").getStringValue();
+			/*
+			dataset [0] = new LightWeightDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-train.metadata", true));
+			dataset [1] = new LightWeightDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-test.metadata",  true));
+			*/
 			
-			// dataset [0] = new LightWeightDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-train.metadata", true));
-			// dataset [1] = new LightWeightDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-test.metadata",  true));
-			
-			dataset [0] = new RecordDataset (
-				DatasetUtils.buildPath(
-					"/fast/crossbow/imagenet/train", 
-					"imagenet-train.metadata", true
-				)
-			);
-			
-			dataset [1] = new RecordDataset (
-				DatasetUtils.buildPath(
-					"/fast/crossbow/imagenet/validation", 
-					"imagenet-test.metadata", true
-				)
-			);
+			dataset [0] = new RecordDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-train.metadata", true));
+			dataset [1] = new RecordDataset (DatasetUtils.buildPath(dataDirectory, "imagenet-test.metadata", true));
 			
 			int [] features = new int [] { 64, 128, 256, 512 }; /* 4 stages */
 			

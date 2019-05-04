@@ -1949,7 +1949,10 @@ void crossbowExecutionContextExecuteNext (
 
 	if (stream->modelSynchronisationStream == NULL)
 		stream->modelSynchronisationStream = dev->modelSynchronisationStream;
-
+	
+	/* Assign dataset to stream */
+        stream->dataset = ctx->dataset[phase];
+	
 	checkCudaErrors (cudaSetDevice(dev->id));
 
 	/* Initialise stream input, case __INPUT_ISPINNED_:

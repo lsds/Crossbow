@@ -577,6 +577,14 @@ JNIEXPORT jint JNICALL Java_uk_ac_imperial_lsds_crossbow_device_TheGPU_execute
 
 /*
  * Class:     uk_ac_imperial_lsds_crossbow_device_TheGPU
+ * Method:    executeNext
+ * Signature: (IIIIII[JILjava/lang/Integer;)I
+ */
+JNIEXPORT jint JNICALL Java_uk_ac_imperial_lsds_crossbow_device_TheGPU_executeNext
+  (JNIEnv *, jobject, jint, jint, jint, jint, jint, jint, jlongArray, jint, jobject);
+
+/*
+ * Class:     uk_ac_imperial_lsds_crossbow_device_TheGPU
  * Method:    schedule
  * Signature: (IILuk/ac/imperial/lsds/crossbow/data/MappedDataBuffer;JJLuk/ac/imperial/lsds/crossbow/data/MappedDataBuffer;JJ[JII)I
  */
