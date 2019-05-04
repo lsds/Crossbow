@@ -37,9 +37,13 @@ class Measurement(object):
             return True
         dt = datetime.strptime(self.timestamp, "%Y/%m/%d %H:%M:%S.%f").strftime('%s.%f')
         t  = int(float(dt) * 1000)
-        if t > start and t < end:
-            return True
-        return False
+        if start > 0:
+            if t < start:
+                return False
+        if end > 0:
+            if t > end:
+                return False
+        return True
 
 def printStats(key, values):
     print("%s %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f" % (
@@ -64,12 +68,12 @@ def crossbow(filename):
         if "Start scheduling tasks at" in line:
             s = line.split(" ")
             timestamp = s[0] + " " + s[1]
-            dt = datetime.strptime(time, "%Y-%m-%d %H:%M:%S").strftime('%s.%f')
+            dt = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").strftime('%s.%f')
             start = int(float(dt) * 1000)
-        elif "Flushing left-over training tasks" in line:
+        elif "Flushing left-over training task" in line:
             s = line.split(" ")
             timestamp = s[0] + " " + s[1]
-            dt = datetime.strptime(time, "%Y-%m-%d %H:%M:%S").strftime('%s.%f')
+            dt = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").strftime('%s.%f')
             end = int(float(dt) * 1000)
     return start, end
 
@@ -155,6 +159,10 @@ def process(filename, start, end):
             memutilvalues.append(m.memory.utilisation)
         if np.mean(gpuutilvalues) < 1:
             continue
+        gpuutilvalues = gpuutilvalues[20:]
+        gpuutilvalues = gpuutilvalues[:-100]
+        print("========================")
+        print(gpuutilvalues)
         agggpuutil.extend(gpuutilvalues)
         aggmemutil.extend(memutilvalues)
         print("GPU utilization stats for GPU " + key)
