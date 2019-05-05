@@ -60,12 +60,14 @@ OPTS="-server -XX:+UseConcMarkSweepGC -XX:NewRatio=2 -XX:SurvivorRatio=16 -Xms48
 CLASS="uk.ac.imperial.lsds.crossbow.ResNetv1"
 CLASSFILE="${TESTS}/`echo ${CLASS} | tr '.' '/'`.class"
 
-resultdir="results/"
+#resultdir="results/"
+resultdir="/cache/train_dir"
 [ ! -d ${resultdir} ] && mkdir -p ${resultdir}
 
 crossbowDirExists ${resultdir}
 
-datadir="$CROSSBOW_HOME/data/imagenet/"
+# datadir="$CROSSBOW_HOME/data/imagenet/"
+datadir="/cache/data_dir/"
 crossbowDirExists ${datadir}
 
 layers=50
@@ -142,8 +144,7 @@ NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --layers ${layers} \
     --reuse-memory true \
     --direct-scheduling false \
-    --data-directory ${datadir} \
-    &> ${resultdir}/${resultfile}
+    --data-directory ${datadir}
 
 echo "Done"
 
