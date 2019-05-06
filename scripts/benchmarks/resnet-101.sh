@@ -44,7 +44,7 @@ if [ -z $CROSSBOW_HOME ]; then
 fi
 
 # Enable GPU utilisation measurements
-MEASUREMENTS=1
+MEASUREMENTS=0
 MEASUREMENTSCRIPT="$CROSSBOW_HOME/tools/measurements/gpu-measurements.sh"
 MEASUREMENTSCRIPTPID=
 
@@ -81,27 +81,31 @@ numgpus=8
 momentum="0.9"
 learningrate="0.1"
 learningratepolicy="multistep"
-learningratesteps="30,60"
+learningratesteps="30,60,80"
 learningratestepunit="epochs"
 learningrategamma="0.1"
 decay="0.0001"
 
-batchsize=16
+batchsize=32
 
-epochs=90
+N=90
+trainingunit="epochs"
 if [ $MEASUREMENTS -gt 0 ]; then
-    # Train only for a single epoch. Processing should 
+    # Train only for a few tasks. Processing should 
     # sufficient time to gather utilisation metrics
-    epochs=1
+    N=10000
+    trainingunit="tasks"
 fi
 
 # updatemodel="DEFAULT"
 updatemodel="WORKER"
 # updatemodel="SYNCHRONOUSEAMSGD"
+# updatemodel="SMA"
+
 alpha="0.1"
 
 numreplicas=1
-wpcscale=1000000
+wpcscale=1
 
 devices=`crossbowCreateDeviceList ${numgpus}`
     
@@ -113,10 +117,8 @@ echo "[INFO] Synchronise every $wpc tasks"
     
 echo "[INFO] Batch size is $batchsize"
     
-learningratesteps="30,60,80"
-    
 # echo "[INFO] Train for $epochs epochs (schedule is $learningratesteps)"
-echo "[INFO] Train for $epochs epochs"
+echo "[INFO] Train for $N $trainingunit"
 
 # Give result file a meaningful name
 resultfile="resnet-101-b-${batchsize}-g-${numgpus}-m-${numreplicas}.out"
@@ -133,12 +135,6 @@ if [ $MEASUREMENTS -gt 0 ]; then
     MEASUREMENTSCRIPTPID=$!
 fi
 
-# The data directory is hard-coded for now until the code supports
-# distinct directories for training and validation record dataset:
-#
-# --data-directory ${datadir}
-
-# Do not redirect output for a file by default
 NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --display-interval 1000 \
     --cpu false \
@@ -150,7 +146,7 @@ NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --wpc ${wpc} \
     --number-of-gpu-models ${numreplicas} \
     --number-of-gpu-streams ${numreplicas} \
-    --training-unit "epochs" --N ${epochs} \
+    --training-unit ${trainingunit} --N ${N} \
     --test-interval-unit "epochs" --test-interval 1 \
     --queue-measurements true \
     --tee-measurements true \
@@ -167,6 +163,7 @@ NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --number-of-result-slots 128 \
     --alpha ${alpha} \
     --dataset-name ${dataset} \
+    --data-directory ${datadir} \
     --layers ${layers} \
     --reuse-memory true \
     &> ${resultdir}/${resultfile}
@@ -176,6 +173,7 @@ if [ $MEASUREMENTS -gt 0 ]; then
     echo "Stop GPU measurements"
     if [ -n $MEASUREMENTSCRIPTPID ]; then
         kill -15 $MEASUREMENTSCRIPTPID >/dev/null 2>&1
+        killall "nvidia-smi" >/dev/null 2>&1
     fi
 fi
 
