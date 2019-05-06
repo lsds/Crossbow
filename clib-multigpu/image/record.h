@@ -24,6 +24,8 @@ void crossbowRecordReadFromFile (crossbowRecordP, FILE *, int);
 
 char *crossbowRecordString (crossbowRecordP);
 
+void crossbowRecordDump (crossbowRecordP);
+
 int crossbowRecordLabelCopy (crossbowRecordP, void *, int, int);
 
 void crossbowRecordFree (crossbowRecordP);

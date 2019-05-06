@@ -50,12 +50,32 @@ void crossbowRecordReadFromFile (crossbowRecordP p, FILE *file, int position) {
         p->boxes = crossbowArrayListCreate (N);
         for (ndx = 0; ndx < N; ++ndx) {
             crossbowBoundingBoxP box = crossbowBoundingBoxCreate ();
-            nr = fread(&(box->xmin), 4, 1, file); invalidConditionException(nr == 1);
-            nr = fread(&(box->ymin), 4, 1, file); invalidConditionException(nr == 1);
-            nr = fread(&(box->xmax), 4, 1, file); invalidConditionException(nr == 1);
-            nr = fread(&(box->ymax), 4, 1, file); invalidConditionException(nr == 1);
             /* Store box in array list */
             crossbowArrayListSet (p->boxes, ndx, box);
+        }
+        /* Read xmin N times */
+        for (ndx = 0; ndx < N; ++ndx) {
+            /* Get i-th box and read variable */
+            crossbowBoundingBoxP box = crossbowArrayListGet (p->boxes, ndx);
+            nr = fread(&(box->xmin), 4, 1, file); invalidConditionException(nr == 1);
+	}
+        /* Read xmin N times */
+        for (ndx = 0; ndx < N; ++ndx) {
+            /* Get i-th box and read variable */
+            crossbowBoundingBoxP box = crossbowArrayListGet (p->boxes, ndx);
+            nr = fread(&(box->ymin), 4, 1, file); invalidConditionException(nr == 1);
+        }
+        /* Read xmin N times */
+        for (ndx = 0; ndx < N; ++ndx) {
+            /* Get i-th box and read variable */
+            crossbowBoundingBoxP box = crossbowArrayListGet (p->boxes, ndx);
+            nr = fread(&(box->xmax), 4, 1, file); invalidConditionException(nr == 1);
+        }
+        /* Read xmin N times */
+        for (ndx = 0; ndx < N; ++ndx) {
+            /* Get i-th box and read variable */
+            crossbowBoundingBoxP box = crossbowArrayListGet (p->boxes, ndx);
+            nr = fread(&(box->ymax), 4, 1, file); invalidConditionException(nr == 1);
         }
     }
     /* Read image dimensions */
@@ -68,9 +88,9 @@ void crossbowRecordReadFromFile (crossbowRecordP p, FILE *file, int position) {
     crossbowImageDecode (p->image);
     crossbowImageCast (p->image);
     
-	fseek(file, position,  SEEK_SET); /* Reset file pointer to the beginning of this record */
-	fseek(file, p->length, SEEK_CUR); /* Increment pointer by record length */
-	return;
+    fseek(file, position,  SEEK_SET); /* Reset file pointer to the beginning of this record */
+    fseek(file, p->length, SEEK_CUR); /* Increment pointer by record length */
+    return;
 }
 
 char *crossbowRecordString (crossbowRecordP p) {
@@ -78,11 +98,11 @@ char *crossbowRecordString (crossbowRecordP p) {
 	char s [2048];
 	int offset;
 	size_t remaining;
-    char *img;
+	char *img;
 	memset (s, 0, sizeof(s));
 	remaining = sizeof(s) - 1;
 	offset = 0;
-    img = crossbowImageString (p->image);
+	img = crossbowImageString (p->image);
 	crossbowStringAppend (s, &offset, &remaining, "%7d bytes; label %3d; %d boxes; %4d x %4d pixels; %s}", 
         p->length, 
         p->label, 
@@ -92,6 +112,17 @@ char *crossbowRecordString (crossbowRecordP p) {
 	if (img)
     	crossbowStringFree (img);
 	return crossbowStringCopy (s);
+}
+
+void crossbowRecordDump (crossbowRecordP p) {
+	int i;
+	crossbowBoundingBoxP box;
+	if (! p->boxes)
+		return;
+	for (i = 0; i < crossbowArrayListSize(p->boxes); i++) {
+		box = crossbowArrayListGet(p->boxes, i);
+		crossbowBoundingBoxDump(box);
+	}
 }
 
 int crossbowRecordLabelCopy (crossbowRecordP p, void *buffer, int offset, int limit) {

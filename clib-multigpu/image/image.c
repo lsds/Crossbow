@@ -297,8 +297,39 @@ void crossbowImageCrop (crossbowImageP p, int height, int width, int top, int le
 	return;
 }
 
+/* 
+ * With a 50% chance, outputs the contents of `image` flipped along the width. 
+ * Otherwise output the image as-is.
+ */
 void crossbowImageRandomFlipLeftRight (crossbowImageP p) {
-	nullPointerException(p);
+	int c, h, w;
+	
+	nullPointerException (p);
+	invalidConditionException (p->decoded);
+	invalidConditionException (p->isfloat);
+	
+	int height = crossbowImageCurrentHeight (p);
+	int width = crossbowImageCurrentWidth (p);
+	int channels = p->channels;
+	
+	/* Flip a coin: if value is less that 0.5, mirror the image */
+	float value = crossbowYarngNext (0.0, 1.0);
+	unsigned mirror = (value < 0.5F);
+	if (! mirror) return;
+	dbg("Flip image (%d x %d x %d)\n", height, width, channels);
+	int src, dst;
+	float tmp;
+	for (h = 0; h < height; ++h) {
+		for (w = 0; w < width; ++w) {
+			for (c = 0; c < channels; ++c) {
+				src = ((h * width  + w) * channels + c);
+				dst = ((h * width  + (width - 1 - w)) * channels + c);
+				tmp = p->data[src];
+				p->data[src] = p->data[dst];
+				p->data[dst] = tmp;
+			}
+		}
+	}
 	return;
 }
 
@@ -486,6 +517,24 @@ void crossbowImageSubtract (crossbowImageP p, float value) {
 	elements = crossbowImageCurrentElements (p);
 	for (i = 0; i < elements; ++i)
 		p->data [i] -= value;
+	return;
+}
+
+void crossbowImageCheckBounds (crossbowImageP p, float lower, float upper) {
+	int i;
+	int elements;
+	int errors;
+	nullPointerException(p);
+	invalidConditionException(p->isfloat);
+	elements = crossbowImageCurrentElements (p);
+	errors = 0;
+	for (i = 0; i < elements; ++i) {
+		if ((p->data [i] < lower) && (p->data [i] > upper))
+			errors ++;
+	}
+	if (errors) {
+		err("%d/%d image pixels out of bounds\n", errors, elements);
+	}
 	return;
 }
 

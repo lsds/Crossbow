@@ -92,6 +92,12 @@ def _get_image_resize_method(method, position=0):
 
     return resize_method_0()
 
+def _normalized_image(image):
+    # Rescale from [0, 255] to [0, 2]
+    image = tf.multiply(image, 1. / 127.5)
+    # Rescale to [-1, 1]
+    image = tf.subtract(image, 1.0)
+    return image
 
 def _eval_image(image, height, width, position, method):
     with tf.name_scope('eval_image'):
@@ -141,8 +147,11 @@ def _eval_image(image, height, width, position, method):
         distorted_image = tf.slice(distorted_image, [crop_top, crop_left, 0], [height, width, 3])
 
         distorted_image.set_shape([height, width, 3])
-
+       	
         image = distorted_image
+        
+        # Normalise image
+        image = _normalized_image(image)
 
     return image
 
@@ -189,8 +198,11 @@ def _train_image(image_buffer, height, width, bbox, position, method):
         # Restore the shape since the dynamic slice based upon the bbox_size loses
         # the third dimension.
         distorted_image.set_shape([height, width, 3])
+        
+        # Normalise image
+        distorted_image = _normalized_image(distorted_image)
 
-        return distorted_image
+        return bbox_begin, bbox_size, distorted_image
 
 
 if __name__ == "__main__":
@@ -243,7 +255,7 @@ if __name__ == "__main__":
         bbox = tf.concat([ymin, xmin, ymax, xmax], 0)
         bbox = tf.expand_dims(bbox, 0)
         bbox = tf.transpose(bbox, [0, 2, 1])
-        train_image = _train_image(imagebuffer, 224, 224, bbox, 0, 'bilinear')
+        bbox_begin, bbox_size, train_image = _train_image(imagebuffer, 224, 224, bbox, 0, 'bilinear')
 
         # Let's run the evaluation image transformations first
 
@@ -254,15 +266,22 @@ if __name__ == "__main__":
         threads = tf.train.start_queue_runners(coord=coord)
         
         for i in range(10):
-            buf, img, h, w, lbl, xmn, ymn, xmx, ymx, eval_img, train_img = session.run(
-                [imagebuffer, image, height, width, label, xmin, ymin, xmax, ymax, eval_image, train_image])
+            buf, img, h, w, lbl, xmn, ymn, xmx, ymx, eval_img, bbx, bbx_bgn, bbx_sz, train_img = session.run(
+                [imagebuffer, image, height, width, label, xmin, ymin, xmax, ymax, eval_image, bbox, bbox_begin, bbox_size, train_image])
 
             # Change label in the range [0,999]
             lbl[0] -= 1
 
             csum = np.sum(img)
-
-            print("Record contains image of shape %s (height %d width %d) and checksum %d" % (img.shape, h, w, csum))
+            print("=== [Record dump] ===")
+            print("Image shape %s (height %d width %d), checksum %d and label %d" % (img.shape, h, w, csum, lbl))
+            print("xmin", xmn)
+            print("ymin", ymn)
+            print("xmax", xmx)
+            print("ymax", ymx)
+            print("bbox", bbx)
+            print("bbox_begin", bbx_bgn)
+            print("bbox_size", bbx_sz)
             print("Evalaution image of shape %s and checksum %d" % (eval_img.shape, np.sum(eval_img)))
             print("Training image of shape %s and checksum %d" % (train_img.shape, np.sum(train_img)))
 

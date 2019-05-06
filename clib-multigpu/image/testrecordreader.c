@@ -27,6 +27,9 @@ static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
 	/* Cast image to 32-bit float */
 	crossbowImageCast (record->image);
 	
+	if (verbose > 0)
+		printf("Checksum of image is %.4f\n", crossbowImageChecksum (record->image));
+	
 	/* Get image height and width (and convert to floats) */
 	float h = (float) crossbowImageInputHeight (record->image);
 	float w = (float) crossbowImageInputWidth  (record->image);
@@ -62,6 +65,17 @@ static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
 	if (verbose > 0)
 		printf("Checksum of cropped image is %.4f\n", crossbowImageChecksum (record->image));
 	
+	/* Rescale from [0, 255] to [0, 2] */
+	/* crossbowImageCheckBounds (record->image, 0.0, 255.0); */
+	crossbowImageMultiply(record->image, 1. / 127.5);
+	
+	/* Rescale to [-1, 1] */
+	crossbowImageSubtract(record->image, 1.);
+	/* crossbowImageCheckBounds (record->image, -1.0, 1.0); */
+	
+	if (verbose > 0)
+		printf("Checksum of test image is %.4f\n", crossbowImageChecksum (record->image));
+	
 	return;
 }
 
@@ -75,6 +89,9 @@ static void preprocessTrainingRecord (crossbowRecordP record, int verbose) {
 
 	/* Cast image to 32-bit float */
 	crossbowImageCast (record->image);
+	
+	if (verbose > 0)
+		printf("Checksum of resized image is %.4f\n", crossbowImageChecksum (record->image));
 
 	/*
 	 * Sample bounding box. If not box is supplied,
@@ -114,6 +131,14 @@ static void preprocessTrainingRecord (crossbowRecordP record, int verbose) {
 	dbg("Crop image to (224 x 224)\n");
 	crossbowImageResize (record->image, 224, 224);
 	
+	/* Rescale from [0, 255] to [0, 2] */
+	/* crossbowImageCheckBounds (record->image, 0.0, 255.0); */
+	crossbowImageMultiply(record->image, 1. / 127.5);
+	
+	/* Rescale to [-1, 1] */
+	crossbowImageSubtract(record->image, 1.);
+	/* crossbowImageCheckBounds (record->image, -1.0, 1.0); */
+
 	if (verbose > 0)
 		printf("Checksum of traning image is %.4f\n", crossbowImageChecksum (record->image));
 	
@@ -124,7 +149,7 @@ int main (int argc, char *argv[]) {
 	/* Input argument iterators */
 	int i, j;
 	/* Default input arguments */
-	unsigned verbose = 0;
+	unsigned verbose = 1;
 	char *directory = "examples";
 	char *subset = "train";
 	char *type = "test";
@@ -167,7 +192,7 @@ int main (int argc, char *argv[]) {
 	
 	crossbowYarngInit(123456789);
 	
-	crossbowRecordReaderP reader = crossbowRecordReaderCreate (1); /* 1 worker */
+	crossbowRecordReaderP reader = crossbowRecordReaderCreate (1, 0); /* 1 worker, no shuffle */
 	
 	/* Register dataset */
 	int idx;
@@ -190,11 +215,12 @@ int main (int argc, char *argv[]) {
 	while (crossbowRecordReaderHasNext(reader) && (count < 10)) {
 		crossbowRecordP record = crossbowRecordCreate ();
 		crossbowRecordReaderNext (reader, record);
-		if (verbose > 1) {
+		if (verbose > 0) {
 			char *s = crossbowRecordString(record);
-			printf("%s\n", s);
+			printf("=== [%s] ===\n", s);
 			crossbowStringFree (s);
 			/* crossbowImageDump (record->image, 5); */
+			crossbowRecordDump (record);
 		}
 		if (strcmp (type, "train") == 0)
 			preprocessTrainingRecord (record, verbose);

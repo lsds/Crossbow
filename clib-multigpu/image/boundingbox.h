@@ -15,4 +15,6 @@ unsigned crossbowBoundingBoxIsValid (crossbowBoundingBoxP);
 
 void crossbowBoundingBoxFree (crossbowBoundingBoxP);
 
+void crossbowBoundingBoxDump (crossbowBoundingBoxP);
+
 #endif /* __CROSSBOW_BBOX_H_ */

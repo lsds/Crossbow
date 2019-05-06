@@ -118,6 +118,8 @@ void crossbowImageMultiply (crossbowImageP, float);
 
 void crossbowImageSubtract (crossbowImageP, float);
 
+void crossbowImageCheckBounds (crossbowImageP, float, float);
+
 char *crossbowImageString (crossbowImageP);
 
 char *crossbowImageInfo (crossbowImageP);
