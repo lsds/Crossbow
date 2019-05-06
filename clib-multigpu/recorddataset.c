@@ -197,22 +197,30 @@ void crossbowRecordDatasetFree (crossbowRecordDatasetP p) {
 	if (! p)
 		return;
 	
+	info("Free record dataset\n");
+	
 	/* Wait for thread to exit (it may still swapping) */
+	/*
 	p->exit = 1;
 	pthread_join(p->thread, NULL);
+	*/
 	
 	/* Free buffer */
 	info("Free double buffer\n");
+	/*
 	if (p->buffer)
 		crossbowDoubleBufferFree (p->buffer);
+	*/
 	
 	/* Free record dataset */
 	info("Free record reader\n");
+	/*
 	if (p->reader)
 		crossbowRecordReaderFree (p->reader);
-
+	*/
+	
 	crossbowListFree (p->events);
-
+	
 	crossbowFree (p, sizeof(crossbow_record_dataset_t));
 	return;
 }
