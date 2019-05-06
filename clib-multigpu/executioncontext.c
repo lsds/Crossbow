@@ -1892,14 +1892,14 @@ void crossbowExecutionContextExecuteNext (
 	long *argv,
 	int phase,
 	jobject replica) {
-
+	
 	dbg("Execute task %04d (dataflow %d phase %d): examples <%p [%10d, %10d) free %10ld> labels <%p [%10d, %10d) free %10ld>\n",
 			taskId,
 			dataflowId,
 			phase,
 			NULL, examplesStartP, examplesEndP, argv[0],
 			NULL,   labelsStartP,   labelsEndP, argv[1]);
-
+		
 	if ((examplesStartP == 0) && (labelsStartP == 0)) {
 		/*
 		 * N tasks has been scheduled, and the next N tasks
