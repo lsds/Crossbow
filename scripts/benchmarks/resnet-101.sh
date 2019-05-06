@@ -140,7 +140,7 @@ NCCL_DEBUG=WARN java $OPTS -cp $JCP $CLASS \
     --cpu false \
     --gpu true \
     --number-of-task-handlers 8 \
-    --number-of-file-handlers 8 \
+    --number-of-file-handlers 16 \
     --number-of-callback-handlers 8 \
     --gpu-devices ${devices} \
     --wpc ${wpc} \
