@@ -82,10 +82,10 @@ crossbowModelManagerP crossbowModelManagerCreate (JNIEnv *env, int size, crossbo
 	checkCudaErrors (cudaSetDevice(p->theModel->dev));
 
 	/* Create multi-device synchronisation events on default device */
-    p->synched = (cudaEvent_t *) crossbowMalloc (numberofdevices * sizeof(cudaEvent_t));
-    for (i = 0; i < numberofdevices; ++i)
-        checkCudaErrors(cudaEventCreateWithFlags(&(p->synched[i]), cudaEventDisableTiming));
-        // checkCudaErrors(cudaEventCreateWithFlags(&(p->synched[i]), cudaEventBlockingSync | cudaEventDisableTiming));
+    //p->synched = (cudaEvent_t *) crossbowMalloc (numberofdevices * sizeof(cudaEvent_t));
+    //for (i = 0; i < numberofdevices; ++i)
+    //    checkCudaErrors(cudaEventCreateWithFlags(&(p->synched[i]), cudaEventDisableTiming));
+    //    // checkCudaErrors(cudaEventCreateWithFlags(&(p->synched[i]), cudaEventBlockingSync | cudaEventDisableTiming));
     
     /*
      * Assign `synched` event to each device individually. This will help 
@@ -93,17 +93,16 @@ crossbowModelManagerP crossbowModelManagerCreate (JNIEnv *env, int size, crossbo
      * to ensure correctness. 
      * 
      * (See use of NCCL library is executioncontext.c)
-     *
-	 * p->synched = (cudaEvent_t *) crossbowMalloc (numberofdevices * sizeof(cudaEvent_t));
-	 * for (deviceId = 0; deviceId < numberofdevices; ++deviceId) {
-	 *	dev = crossbowArrayListGet (devices, deviceId);
-	 *	if (! crossbowDeviceSelected (dev))
-	 *		continue;
-	 *	checkCudaErrors (cudaSetDevice(dev->id));
-	 *	checkCudaErrors(cudaEventCreateWithFlags(&(p->synched[dev->id]), cudaEventBlockingSync | cudaEventDisableTiming));
-	 * }
-	 * checkCudaErrors (cudaSetDevice(p->theModel->dev));
      */
+	p->synched = (cudaEvent_t *) crossbowMalloc (numberofdevices * sizeof(cudaEvent_t));
+	for (deviceId = 0; deviceId < numberofdevices; ++deviceId) {
+		dev = crossbowArrayListGet (devices, deviceId);
+		if (! crossbowDeviceSelected (dev))
+			continue;
+		checkCudaErrors (cudaSetDevice(dev->id));
+		checkCudaErrors(cudaEventCreateWithFlags(&(p->synched[dev->id]), cudaEventBlockingSync | cudaEventDisableTiming));
+	}
+	checkCudaErrors (cudaSetDevice(p->theModel->dev));
 
 	/*
 	 * Acquire global references to Java objects and their methods

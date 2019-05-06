@@ -3,10 +3,12 @@
 
 #include "../executioncontext.h"
 
-void crossbowSynchronisationAccumulateGradientsAcrossDevices (crossbowExecutionContextP ctx, crossbowModelP defaultModel, crossbowDeviceP defaultDev);
+void crossbowSynchronisationAllReduceGradientsAcrossDevices (crossbowExecutionContextP);
 
-void crossbowSynchronisationSynchroniseModelAcrossDevices (crossbowExecutionContextP ctx, crossbowModelP defaultModel, crossbowDeviceP defaultDev, unsigned shareMomentum);
+void crossbowSynchronisationAccumulateGradientsAcrossDevices (crossbowExecutionContextP, crossbowModelP, crossbowDeviceP);
 
-void crossbowSynchronisationSynchroniseModelOnDevice (crossbowExecutionContextP ctx, int first, crossbowModelP model, crossbowDeviceP dev);
+void crossbowSynchronisationSynchroniseModelAcrossDevices (crossbowExecutionContextP, crossbowModelP, crossbowDeviceP, unsigned);
+
+void crossbowSynchronisationSynchroniseModelOnDevice (crossbowExecutionContextP, int, crossbowModelP, crossbowDeviceP);
 
 #endif /* __CROSSBOW_SYNCHRONISATION_COMMON_H_ */

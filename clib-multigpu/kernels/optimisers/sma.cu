@@ -1,50 +1,69 @@
 #include "sma.h"
 
 void crossbowKernelOptimiserSMA (crossbowStreamP s) {
-
+	
+	/* Pointers to the model replica and its current and past gradient */
 	crossbowDataBufferP model, gradient, last;
-	float rate;
-
+	/* Number of model (and gradient) parameters */
 	int elements;
-
+	/* The current learning rate */
+	float rate;
 	/* Constants */
 	float one = 1;
 	float minusone = -1;
-
+	
 	/* Get model replica data buffer */
 	model = s->model->data;
-
-	/* Get current and gradient data buffer */
+	/* Get current and past gradient data buffer */
 	gradient = s->model->gradient;
 	last = s->model->last;
-
+	/* Get number of parameters */
 	elements = s->model->elements;
-
-	/* Apply weight decay */
-	if (s->model->conf->weightDecay > 0)
-		checkCublasStatus(cublasSaxpy (s->cublasHandle[s->op->branch], elements, &(s->model->conf->weightDecay), (float *) (model->dev), 1, (float *) (gradient->dev), 1));
-
-	/*
-	checkCudaErrors(cudaDeviceSynchronize());
-
-	float checksum = crossbowDataBufferComputeCheckSum(gradient, 0, s->model->bytes);
-	info("Gradient checksum of task %d is %.5f\n", s->task, checksum);
-	*/
-
+	
+	/* Apply weight decay to gradient */
+	if (s->model->conf->weightDecay > 0) {
+		checkCublasStatus(cublasSaxpy (s->cublasHandle[s->op->branch], 
+			elements, 
+			&(s->model->conf->weightDecay), 
+			(float *) (model->dev),
+			1,
+			(float *) (gradient->dev), 
+			1));
+	}
+	
+	/* Debugging
+	 *
+	 * checkCudaErrors(cudaDeviceSynchronize());
+	 * 
+	 * float checksum = crossbowDataBufferComputeCheckSum(gradient, 0, s->model->bytes);
+	 * info("Gradient checksum of task %d is %.5f\n", s->task, checksum);
+	 */
+	
+	/* Get learning rate */
 	rate = minusone * crossbowSolverConfGetLearningRate(s->model->conf, s->task);
-
+	
 	if (s->model->conf->momentum > 0) {
-
+		
 		if (s->model->conf->momentumMethod == NESTEROV) {
 			err("Nesterov's momentum has been disabled\n");
 		}
-
+		
 		/* Scale gradient based on learning rate */
-		checkCublasStatus(cublasSscal(s->cublasHandle[s->op->branch], elements, &(rate), (float *) (gradient->dev), 1));
-
+		checkCublasStatus(cublasSscal(s->cublasHandle[s->op->branch], 
+			elements, 
+			&(rate), 
+			(float *) (gradient->dev), 
+			1));
+		
 		/* Apply momentum to gradient */
-		checkCublasStatus(cublasSaxpy (s->cublasHandle[s->op->branch], elements, &(s->model->conf->momentum), (float *) (last->dev), 1, (float *) (gradient->dev), 1));
-
+		checkCublasStatus(cublasSaxpy (s->cublasHandle[s->op->branch], 
+			elements, 
+			&(s->model->conf->momentum), 
+			(float *) (last->dev), 
+			1, 
+			(float *) (gradient->dev), 
+			1));
+		
 		/* Copy current gradient buffer into last */
 		checkCudaErrors(cudaMemcpyAsync(last->dev, gradient->dev, s->model->bytes, cudaMemcpyDeviceToDevice, s->stream[s->op->branch]));
 		
