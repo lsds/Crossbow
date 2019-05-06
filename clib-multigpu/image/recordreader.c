@@ -19,6 +19,8 @@
  */
 static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
 	
+	dbg("Preprocess test record\n");
+	
 	/* Cast image to 32-bit float */
 	crossbowImageCast (record->image);
 	
@@ -58,9 +60,18 @@ static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
 		printf("Checksum of cropped image is %.4f\n", crossbowImageChecksum (record->image));
 	
 	/* Rescale from [0, 255] to [0, 2] */
+	/*
+	crossbowImageCheckBounds (record->image, 0.0, 255.0);
+	*/
 	crossbowImageMultiply(record->image, 1. / 127.5);
+	
 	/* Rescale to [-1, 1] */
 	crossbowImageSubtract(record->image, 1.);
+	/*
+	crossbowImageCheckBounds (record->image, -1.0, 1.0);
+	*/
+	
+	crossbowImageTranspose (record->image);
 	
 	return;
 }
@@ -74,6 +85,7 @@ static void preprocessTestRecord (crossbowRecordP record, unsigned verbose) {
 static void preprocessTrainingRecord (crossbowRecordP record, int verbose) {
 	
 	(void) verbose;
+	dbg("Preprocess training record\n");
 	
 	/* Cast image to 32-bit float */
 	crossbowImageCast (record->image);
@@ -117,9 +129,18 @@ static void preprocessTrainingRecord (crossbowRecordP record, int verbose) {
 	crossbowImageResize (record->image, 224, 224);
 	
 	/* Rescale from [0, 255] to [0, 2] */
+	/*
+	crossbowImageCheckBounds (record->image, 0.0, 255.0);
+	*/
 	crossbowImageMultiply(record->image, 1. / 127.5);
 	/* Rescale to [-1, 1] */
 	crossbowImageSubtract(record->image, 1.);
+	/*
+	crossbowImageCheckBounds (record->image, -1.0, 1.0);
+	*/
+	
+	crossbowImageTranspose (record->image);
+	return;
 }
 
 /*
@@ -137,7 +158,7 @@ static void *handle (void *args) {
     /* Pin thread to a particular core based on worker id */
 
     cpu_set_t set;
-    int core = 18 + task->id;
+    int core = 19 + task->id;
     CPU_ZERO (&set);
     CPU_SET  (core, &set);
     sched_setaffinity (0, sizeof(set), &set);
@@ -154,11 +175,15 @@ static void *handle (void *args) {
         crossbowRecordFileReadSafely (task->file, task->id, task->position, record);
 		bytes += record->length;
         /* Pre-process record */
-		if (task->training) {
-			preprocessTrainingRecord (record, 0);
-		} else {
-			preprocessTestRecord (record, 0);
-		}
+        
+        if (task->training) {
+            preprocessTrainingRecord (record, 0);
+        } else {
+            preprocessTestRecord (record, 0);
+        }
+        
+        /* preprocessTestRecord (record, 0); */
+	
         /* Copy decoded (augmented) image to buffer */
         crossbowImageCopy (record->image, task->buffer[0], task->offset[0], 0); /* Ignore limit */
         /* Copy label */
@@ -171,10 +196,10 @@ static void *handle (void *args) {
     return args;
 }
 
-crossbowRecordReaderP crossbowRecordReaderCreate (int workers) {
+crossbowRecordReaderP crossbowRecordReaderCreate (int workers, unsigned shuffle) {
     crossbowRecordReaderP p = NULL;
     p = (crossbowRecordReaderP) crossbowMalloc (sizeof(crossbow_record_reader_t));
-	p->shuffle = 1;
+    p->shuffle = shuffle;
     p->dataset = crossbowListCreate ();
     p->counter = 0;
     p->records = 0;
@@ -297,7 +322,7 @@ crossbowRecordFileP crossbowRecordReaderNextPointer (crossbowRecordReaderP p, in
             /* Reset file iterator */
             crossbowListIteratorReset (p->dataset);
             p->wraps ++;
-			info("Wrap #%03d\n", p->wraps);
+            info("Wrap #%03d\n", p->wraps);
         }
         p->current = crossbowListIteratorNext (p->dataset);
     }
@@ -464,6 +489,8 @@ void crossbowRecordReaderReadProperly (crossbowRecordReaderP p,
 	/* Write offset for output buffer */
 	offset[0] = offset[1] = 0;
 	counter = 0;
+	
+	dbg("Read %s data\n", (training) ? "training" : "test");
 
 	for (id = 0; id < p->workers; ++id) {
 

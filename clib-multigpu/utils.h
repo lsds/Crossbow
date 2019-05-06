@@ -60,13 +60,13 @@
 #undef EAMSGD__NORMALIZE
 
 #define EAMSGD__APPLY_MOMENTUM
-// #undef EAMSGD__APPLYMOMENTUM
+/* #undef EAMSGD__APPLYMOMENTUM */
 
 // #define EAMSGD__SHARE_MOMENTUM
 #undef EAMSGD__SHARE_MOMENTUM
 
-/* #define USE_NCCL */
-#undef USE_NCCL
+#define USE_NCCL
+/* #undef USE_NCCL */
 
 /* #define MAP_RECORDS */
 #undef MAP_RECORDS

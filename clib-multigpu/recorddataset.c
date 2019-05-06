@@ -13,7 +13,7 @@ static void *handle (void *args) {
 	self = (crossbowRecordDatasetP) args;
 
 	cpu_set_t set;
-	int core = 1;
+	int core = 18;
 	CPU_ZERO (&set);
 	CPU_SET  (core, &set);
 	sched_setaffinity (0, sizeof(set), &set);
@@ -68,7 +68,7 @@ crossbowRecordDatasetP crossbowRecordDatasetCreate (int workers, int *capacity, 
 	/* Distinguish between training and validation datasets */
 	p->phi = phi;
 
-	p->reader = crossbowRecordReaderCreate (workers);
+	p->reader = crossbowRecordReaderCreate (workers, (p->phi == CHECK) ? 0 : 1);
 
 	p->buffer = crossbowDoubleBufferCreate (capacity, NB, b, padding);
 	crossbowDoubleBufferRegister       (p->buffer);
