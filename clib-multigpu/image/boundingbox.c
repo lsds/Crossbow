@@ -34,3 +34,9 @@ void crossbowBoundingBoxFree (crossbowBoundingBoxP p) {
 		return;
 	crossbowFree (p, sizeof(crossbow_bbox_t));
 }
+
+void crossbowBoundingBoxDump (crossbowBoundingBoxP p) {
+	nullPointerException (p);
+	printf("%.5f %.5f; %.5f %.5f\n", p->xmin, p->ymin, p->xmax, p->ymax);
+}
+

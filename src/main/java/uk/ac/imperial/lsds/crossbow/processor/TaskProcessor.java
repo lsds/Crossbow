@@ -71,9 +71,7 @@ public class TaskProcessor implements Runnable {
 				
 				log.info(String.format("GPU worker exits (tasks are scheduled directly by the dispatcher)"));
 				return;
-			} else {
-				log.info(">>>>>>>>>>>>>> WTF!!!!!!!!!!!!!!!!!!!!!");
-			}
+			} 
 			
 			log.info(String.format("GPU worker is thread %s", Thread.currentThread()));
 			TheCPU.getInstance().bind(1);

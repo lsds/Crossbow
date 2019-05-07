@@ -88,7 +88,7 @@ int main (int argc, char *argv[]) {
 	/* Initialise random number generator */
 	crossbowYarngInit (123456789);
 	
-	crossbowRecordReaderP reader = crossbowRecordReaderCreate (workers);
+	crossbowRecordReaderP reader = crossbowRecordReaderCreate (workers, 0); /* no shuffle */
 	
 	/* Register dataset */
 	int idx;

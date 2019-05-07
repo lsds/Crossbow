@@ -1,5 +1,61 @@
 #include "common.h"
 
+void crossbowSynchronisationAllReduceGradientsAcrossDevices (crossbowExecutionContextP ctx) {
+	int ndx = 0;
+	crossbowDeviceP dev = NULL;
+	crossbowModelP model = NULL;
+#ifndef USE_NCCL
+	(void) ndx;
+	(void) dev;
+	(void) model;
+	(void) ctx;
+	err("NCCL is disabled");
+#else
+	checkNcclErrors(ncclGroupStart());
+	for (ndx = 0; ndx < crossbowArrayListSize (ctx->devices); ++ndx) {
+		
+		/* Get current device */
+		dev = crossbowArrayListGet (ctx->devices, ndx);
+		if (! crossbowDeviceSelected(dev))
+			continue;
+		
+		/* Redirect all CUDA calls to the current device */
+		checkCudaErrors (cudaSetDevice(dev->id));
+		
+		/* Get base model for current device */
+		model = crossbowArrayListGet (ctx->modelmanager->baseModels, dev->id);
+		
+		/*
+		 * We are about to use dev->modelSynchronisationStream.
+		 * A. What events do we have to wait?
+		 *
+		 * Obviously, we have to wait until all differences are
+		 * accumulated.
+		 *
+		 * B. What are the send and receive buffers?
+		 *
+		 * The send buffer for each device are (base-)model->gradient.
+		 * The receive buffers are (base-)model->diff.
+		 */
+		
+		checkCudaErrors(cudaStreamWaitEvent(dev->modelSynchronisationStream, model->accumulated, 0));
+		
+		checkCudaErrors(cudaMemsetAsync(model->diff->dev, 0, model->bytes, dev->modelSynchronisationStream));
+		
+		checkNcclErrors(ncclAllReduce(
+			model->gradient->dev,
+			model->diff->dev, 
+			model->elements,
+			ncclFloat, 
+			ncclSum, 
+			ctx->comms[dev->id], 
+			dev->modelSynchronisationStream));
+    }
+    checkNcclErrors(ncclGroupEnd());
+#endif
+	return;
+}
+
 void crossbowSynchronisationAccumulateGradientsAcrossDevices (crossbowExecutionContextP ctx, crossbowModelP defaultModel, crossbowDeviceP defaultDev) {
 	int ndx;
 	crossbowDeviceP dev;
@@ -7,7 +63,7 @@ void crossbowSynchronisationAccumulateGradientsAcrossDevices (crossbowExecutionC
 	float one = 1;
 #ifndef USE_NCCL
 	/* Base model gradients are accumulated on the default device. */
-
+	
 	/* Redirect all CUDA calls to the default device (the master) */
 	checkCudaErrors (cudaSetDevice(defaultDev->id));
 
@@ -15,18 +71,19 @@ void crossbowSynchronisationAccumulateGradientsAcrossDevices (crossbowExecutionC
 
 		/* Get current device */
 		dev = crossbowArrayListGet (ctx->devices, ndx);
-		if ((! crossbowDeviceSelected(dev)) || (dev->id == defaultDev->id)) /* Skip default device */
+		/* Skip default device */
+		if ((! crossbowDeviceSelected(dev)) || (dev->id == defaultDev->id)) 
 			continue;
-
+		
 		/* Get base model for current device */
 		model = crossbowArrayListGet (ctx->modelmanager->baseModels, dev->id);
-
-		/* Wait until partial gradients have been accumulated on current device  */
+		
+		/* Wait until partial gradients have been accumulated on current device */
 		checkCudaErrors(cudaStreamWaitEvent(defaultDev->modelSynchronisationStream, model->accumulated, 0));
 
 		/* Fetch accumulated gradient from current device */
 		cudaMemcpyPeerAsync (defaultModel->temp->dev, defaultDev->id, model->gradient->dev, dev->id, 
-            defaultModel->bytes, defaultDev->modelSynchronisationStream);
+			defaultModel->bytes, defaultDev->modelSynchronisationStream);
 
 		/* Accumulate gradient at master */
 		checkCublasStatus(cublasSaxpy (
@@ -143,15 +200,15 @@ void crossbowSynchronisationSynchroniseModelOnDevice (crossbowExecutionContextP 
 	int id;
 
 	/* Copy `model` to all replicas on device `dev`. Assumes that all CUDA calls have been redirected to that device. */
-
+	
 	/* Wait until device's base model is synchronised */
 	checkCudaErrors(cudaStreamWaitEvent(dev->modelSynchronisationStream, ctx->modelmanager->synched[dev->id], 0));
-
+	
 	for (id = first; id < ctx->modelmanager->size; ++id) {
 
 		if (ctx->modelmanager->locked[id] && ctx->modelmanager->replicas[id]->dev == dev->id) {
 
-			dbg("Copy model to model replica #%d\n", id);
+			dbg("Copy base model to model replica #%d\n", id);
 			crossbowDataBufferCopyDeviceRegion
 				(ctx->modelmanager->replicas[id]->data, model->data, dev->modelSynchronisationStream);
 
