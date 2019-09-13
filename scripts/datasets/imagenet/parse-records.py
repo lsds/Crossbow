@@ -3,6 +3,7 @@ import sys
 import os
 import math
 import numpy as np
+import argparse
 
 import tensorflow as tf
 
@@ -59,14 +60,20 @@ def _parse(record):
     return image, height, width, label, xmin, ymin, xmax, ymax, features['image/class/text']
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input-dir', type=str, default='/data/tensorflow/imagenet/train')
+    parser.add_argument('--output-dir', type=str, default='/data/crossbow/imagenet/train')
+    args = parser.parse_args()
+
     with tf.Session() as session:
         subset = "train"
         maxrecordsperfile = 2048
         N = 0 # Expect 1251 records in 1 file (for training)
 		# Number of records per file...
         mx = 0
-        directory = "/data/tensorflow/imagenet/train"
-        pattern = os.path.join(directory, '%s-*-of-*' % subset)
+        input_dir = args.input_dir
+        output_dir = args.output_dir
+        pattern = os.path.join(input_dir, '%s-*-of-*' % subset)
         files = gfile.Glob(pattern)
         if not files:
             raise ValueError()
@@ -101,7 +108,7 @@ if __name__ == "__main__":
         img_checksums = []
 	    
         filecounter = 1
-        filename = "crossbow-%s.records.%d" % (subset, filecounter)
+        filename = "%s/crossbow-%s.records.%d" % (output_dir, subset, filecounter)
         f = open(filename, "wb")
         # Write number of records as a file header
         recordsinfile = 0
@@ -178,7 +185,7 @@ if __name__ == "__main__":
                 remaining = N - totalrecordswritten
                 if remaining > 0:
                     filecounter += 1
-                    filename = "crossbow-%s.records.%d" % (subset, filecounter)
+                    filename = "%s/crossbow-%s.records.%d" % (output_dir, subset, filecounter)
                     f = open(filename, "wb")
                     # Write file header
                     recordsinfile = 0
